@@ -4,6 +4,7 @@
 
 #include <list>
 #include "matrix.h"
+#include <vector>
 #pragma once
 
 
@@ -44,16 +45,22 @@ public:
 	CString mStr_layer_4_neurons;
 	CString mStr_layer_5_neurons;
 
-	std::list<Matrix*> m_listPtrMatrix_weight;
-	std::list<Matrix*> m_listPtrMatrix_bias;
-	std::list<Matrix*> m_listPtrMatrix_z;
-	std::list<Matrix*> m_listPtrMatrix_activation;
+	std::vector<Matrix*> m_listPtrMatrix_weight;
+	std::vector<Matrix*> m_listPtrMatrix_bias;
+	std::vector<Matrix*> m_listPtrMatrix_z;
+	std::vector<Matrix*> m_listPtrMatrix_activation;
 
 	int m_neuron_per_layer[10] = { 0 };
 
+	void multiplicationMatrice(Matrix&, Matrix&, Matrix&, int n);
+	void additionMatrice(Matrix& , Matrix&, int n );
+	void sigmoidMatrice(Matrix&, int n );
+	void initialiseActivationNiveauSuivant(Matrix&, Matrix&, int n);
 	
 
 	
 	
 	CListBox m_listBox1;
+	afx_msg void OnBnClickedCreatetestinput();
+	afx_msg void OnBnClickedTest();
 };

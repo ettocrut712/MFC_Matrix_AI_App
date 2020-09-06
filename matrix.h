@@ -53,6 +53,8 @@ public:
     Matrix rowReduceFromGaussian();
  //   void readSolutionsFromRREF(std::ostream& os);
     Matrix inverse();
+
+    void multiplication(Matrix&, Matrix&, Matrix&);
     void init_bias_and_weight();
     void init_activation_and_z();
 

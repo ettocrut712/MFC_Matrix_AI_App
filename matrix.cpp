@@ -124,6 +124,28 @@ Matrix& Matrix::operator*=(const Matrix& m)
     }
     return (*this = temp);
 }
+void Matrix::multiplication(Matrix& a, Matrix& w, Matrix& z)
+{
+    int tempRow = a.rows_;
+    int tempCol = w.cols_;
+    int k = a.cols_;
+
+    if (z.cols_ != tempCol || z.rows_ != a.rows_)
+    {
+        int test=0;
+        test = test + 1;
+
+    };
+
+    for (int i = 0; i < tempRow; ++i) {
+        for (int j = 0; j < tempCol; ++j) {
+            for (int k = 0; k < cols_; ++k) {
+                z.p[i][j] += (a.p[i][k] * w.p[k][j]);
+            }
+        }
+    }
+    
+}
 
 Matrix& Matrix::operator*=(double num)
 {
