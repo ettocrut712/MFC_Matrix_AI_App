@@ -1,4 +1,4 @@
-
+﻿
 // MFC_Matrix_AI_AppDlg.cpp : implementation file
 //
 
@@ -10,6 +10,8 @@
 #include "matrix.h"
 #include <iterator>
 #include <algorithm>
+
+
 
 
 
@@ -63,6 +65,9 @@ CMFCMatrixAIAppDlg::CMFCMatrixAIAppDlg(CWnd* pParent /*=nullptr*/)
 	, mStr_layer_3_neurons(_T(""))
 	, mStr_layer_4_neurons(_T(""))
 	, mStr_layer_5_neurons(_T(""))
+	, m_TrainingDataFile(_T(""))
+	, m_str_SampleSize(_T(""))
+	, m_str_NeuronPerSampleInput(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -76,6 +81,9 @@ void CMFCMatrixAIAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_NEURONS_LAYER_4, mStr_layer_4_neurons);
 	DDX_Text(pDX, IDC_NEURONS_LAYER_5, mStr_layer_5_neurons);
 	DDX_Control(pDX, IDC_LIST1, m_listBox1);
+	DDX_Text(pDX, IDC_TrainingDataFile, m_TrainingDataFile);
+	DDX_Text(pDX, IDC_str_SampleSize, m_str_SampleSize);
+	DDX_Text(pDX, IDC_str_NeuronPerSampleInput, m_str_NeuronPerSampleInput);
 }
 
 BEGIN_MESSAGE_MAP(CMFCMatrixAIAppDlg, CDialogEx)
@@ -87,6 +95,7 @@ BEGIN_MESSAGE_MAP(CMFCMatrixAIAppDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_CREATE_MATRIX, &CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix)
 	ON_BN_CLICKED(IDC_Create_test_input, &CMFCMatrixAIAppDlg::OnBnClickedCreatetestinput)
 	ON_BN_CLICKED(IDC_Test, &CMFCMatrixAIAppDlg::OnBnClickedTest)
+	ON_BN_CLICKED(IDC_OpenTrainingData, &CMFCMatrixAIAppDlg::OnBnClickedOpentrainingdata)
 END_MESSAGE_MAP()
 
 
@@ -130,6 +139,10 @@ BOOL CMFCMatrixAIAppDlg::OnInitDialog()
 	mStr_layer_3_neurons = "0";
 	mStr_layer_4_neurons = "0";
 	mStr_layer_5_neurons = "0";
+	m_str_SampleSize = "0";
+	m_str_NeuronPerSampleInput ="0";
+
+
 
 	UpdateData(FALSE);
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -215,53 +228,53 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 		
 	m_number_layer = 0;
 	
-	//lire le nombre de neurons par couche et ajoute ce nombre � la liste "m_neuron_per_layer"
+	//lire le nombre de neurons par couche et ajoute ce nombre à la liste "m_neuron_per_layer"
 	
 	
 	if (_wtoi(mStr_layer_1_neurons) > 0)
 	{
-		m_neuron_per_layer[0] = (_wtoi(mStr_layer_1_neurons));
+		m_neuron_per_layer[m_number_layer] = (_wtoi(mStr_layer_1_neurons));
 		m_number_layer++;
 
-		cLigne.Format(_T("Niveau 1: %d neurones \t"), m_neuron_per_layer[0]);
+		cLigne.Format(_T("Entrée: %d neurones \t"), m_neuron_per_layer[0]);
 		m_listBox1.InsertString(-1, cLigne);
 
 	};
 	
 	if (_wtoi(mStr_layer_2_neurons) > 0)
 	{
-		m_neuron_per_layer[1] = (_wtoi(mStr_layer_2_neurons));
+		m_neuron_per_layer[m_number_layer] = (_wtoi(mStr_layer_2_neurons));
 		m_number_layer++;
 
-		cLigne.Format(_T("Niveau 2: %d neurones \t"), m_neuron_per_layer[1]);
+		cLigne.Format(_T("Couche cachée 1: %d neurones \t"), m_neuron_per_layer[1]);
 		m_listBox1.InsertString(-1, cLigne);
 	};
 
 	if (_wtoi(mStr_layer_3_neurons) > 0)
 	{
-		m_neuron_per_layer[2] = (_wtoi(mStr_layer_3_neurons));
+		m_neuron_per_layer[m_number_layer] = (_wtoi(mStr_layer_3_neurons));
 		m_number_layer++;
 
-		cLigne.Format(_T("Niveau 3: %d neurones \t"), m_neuron_per_layer[2]);
+		cLigne.Format(_T("Couche cachée 2: %d neurones \t"), m_neuron_per_layer[2]);
 		m_listBox1.InsertString(-1, cLigne);
 	};
 
 	if (_wtoi(mStr_layer_4_neurons) > 0)
 	{
-		m_neuron_per_layer[3] = (_wtoi(mStr_layer_4_neurons));
+		m_neuron_per_layer[m_number_layer] = (_wtoi(mStr_layer_4_neurons));
 		m_number_layer++;
 
-		cLigne.Format(_T("Niveau 4: %d neurones \t"), m_neuron_per_layer[3]);
+		cLigne.Format(_T("Couche cachée 3: %d neurones \t"), m_neuron_per_layer[3]);
 		m_listBox1.InsertString(-1, cLigne);
 
 	};
 
 	if (_wtoi(mStr_layer_5_neurons) > 0)
 	{
-		m_neuron_per_layer[4] = (_wtoi(mStr_layer_5_neurons));
+		m_neuron_per_layer[m_number_layer] = (_wtoi(mStr_layer_5_neurons));
 		m_number_layer++;
 
-		cLigne.Format(_T("Niveau 5: %d neurones \t"), m_neuron_per_layer[4]);
+		cLigne.Format(_T("Sortie: %d neurones \t"), m_neuron_per_layer[4]);
 		m_listBox1.InsertString(-1, cLigne);
 	};
 
@@ -286,7 +299,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 	cLigne.Format(_T("  \t"));
 	m_listBox1.InsertString(-1, cLigne);
 
-	cLigne.Format(_T(" Matrice (a) L: %d:  %d  x %d  \t"), level, myMatrix->rows_, myMatrix->cols_);
+	cLigne.Format(_T(" Matrice Entrée   %d  x %d  \t"), myMatrix->rows_, myMatrix->cols_);
 	m_listBox1.InsertString(-1, cLigne);
 
 	for (int i = 0; i < myMatrix->rows_; ++i)
@@ -325,7 +338,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 		cLigne.Format(_T("  \t"));
 		m_listBox1.InsertString(-1, cLigne);
 
-		cLigne.Format(_T(" Matrice(w) L: %d:  %d  x %d  \t"), level, myMatrix->rows_, myMatrix->cols_);
+		cLigne.Format(_T(" Matrice W(%d)  %d  x %d  \t"), level, myMatrix->rows_, myMatrix->cols_);
 		m_listBox1.InsertString(-1, cLigne);
 
 		cLigne.Format(_T("  \t"));													
@@ -361,7 +374,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 		cLigne.Format(_T("  \t"));
 		m_listBox1.InsertString(-1, cLigne);
 
-		cLigne.Format(_T(" Matrice (b) L: %d:  %d x %d \t"), level, myMatrix->rows_, myMatrix->cols_);
+		cLigne.Format(_T(" Matrice B(%d)  %d x %d \t"), level, myMatrix->rows_, myMatrix->cols_);
 		m_listBox1.InsertString(-1, cLigne);
 
 		for (int i = 0; i < myMatrix->rows_; ++i)
@@ -392,7 +405,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 		cLigne.Format(_T("  \t"));
 		m_listBox1.InsertString(-1, cLigne);
 
-		cLigne.Format(_T(" Matrice (z) L: %d:  %d x %d \t"), level, myMatrix->rows_, myMatrix->cols_);
+		cLigne.Format(_T(" Matrice Z(%d)  %d x %d \t"), level, myMatrix->rows_, myMatrix->cols_);
 		m_listBox1.InsertString(-1, cLigne);
 
 		for (int i = 0; i < myMatrix->rows_; ++i)
@@ -420,7 +433,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 		cLigne.Format(_T("  \t"));
 		m_listBox1.InsertString(-1, cLigne);
 
-		cLigne.Format(_T(" Matrice (a) L: %d:  %d x %d \t"), level+1, myMatrix->rows_, myMatrix->cols_);
+		cLigne.Format(_T(" Matrice A(%d)  %d x %d \t"), level+1, myMatrix->rows_, myMatrix->cols_);
 		m_listBox1.InsertString(-1, cLigne);
 
 		for (int i = 0; i < myMatrix->rows_; ++i)
@@ -457,14 +470,80 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreatetestinput()
 	// TODO: Add your control notification handler code here
 	//Va chercher matrice Ao (input), assigne une valeur a chaque input et affiche la matrice dans la listbox.
 
-	Matrix* testMatrix;
+	// Matrix* testMatrix;
 	CString cLigne;
 
-	testMatrix = m_listPtrMatrix_activation.at(0);		//matrice avec les entrees externe (input) est toujours Ao.
+	// Creation d'un fichier avec des données de test
 
-	int i, j=0;
+	/*struct sampleStructure
+	{
+		int numberOfSample;			// nombre d'échantillons dans le fichier
+		int sampleBitSize;				// nombre de bits par échantillon.  On suppose que les valeurs des inputs sont 0 ou 1.  Une autre version sera requise pour des valeurs de 0.0  à 1.0 (nombre réel).
+	};
 
-	cLigne.Format(_T(" Test Matrice input (a) L: %d:  %d x %d\t"), 0, testMatrix->rows_, testMatrix->cols_);
+	struct sample
+	{
+		int input;
+		int output;
+	};*/
+
+
+	sampleStructure structureTestEcriture;
+
+	structureTestEcriture.numberOfSample=3;
+	structureTestEcriture.inputSampleBitSize = 8;			//8 neurons comme entrée
+	structureTestEcriture.outputSampleBitSize = 3;			//3 neurons comme sortie
+
+	sample mySample;
+
+
+	//**********Echantillon 1
+
+	mySample.input = 255;
+	mySample.output = 8;
+
+
+
+
+
+	std::ofstream fsOut;
+	
+	fsOut.open("E:/E_Download/AI_sample_NT.bin", std::ofstream::out);
+
+	if (fsOut.is_open())
+	{
+		fsOut.write((char*) &structureTestEcriture, sizeof(structureTestEcriture));
+		fsOut.write((char*)&mySample, sizeof(mySample));
+
+
+		//**********Echantillon 2
+		mySample.input = 128;
+		mySample.output = 4;
+
+		fsOut.write((char*)&mySample, sizeof(mySample));
+
+		//**********Echantillon 3
+
+		mySample.input = 64;
+		mySample.output = 2;
+
+		fsOut.write((char*)&mySample, sizeof(mySample));
+	}
+	else
+	{
+
+		cLigne.Format(_T(" Create Test Input: ne peut ouvrir un fichier pour écrire"));
+		m_listBox1.InsertString(-1, cLigne);
+	};
+
+
+	fsOut.close();
+
+	//testMatrix = m_listPtrMatrix_activation.at(0);		//matrice avec les entrees externe (input) est toujours Ao.
+
+	/*int j=0;
+
+	cLigne.Format(_T(" Test Matrice input A(%d)  %d x %d\t"), 0, testMatrix->rows_, testMatrix->cols_);
 	m_listBox1.InsertString(-1, cLigne);
 
 	for (int i = 0; i < testMatrix->rows_; ++i)
@@ -479,7 +558,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreatetestinput()
 
 	cLigne.Format(_T("\t "));
 
-	m_listBox1.InsertString(-1, cLigne);
+	m_listBox1.InsertString(-1, cLigne);*/
 }
 
 void CMFCMatrixAIAppDlg::multiplicationMatrice(Matrix& a, Matrix& w, Matrix& z, int level)		//Matrix a (activation), W (weight) sont les inputs, Matrix z: output
@@ -559,7 +638,7 @@ void CMFCMatrixAIAppDlg::additionMatrice(Matrix& z, Matrix& b, int level)		//Mat
 	};
 }
 
-void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, int level)
+void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, int level) //level = le niveau suivant pour activation
 {
 	CString cLigne;
 	
@@ -571,9 +650,16 @@ void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, 
 		};
 	};
 
-
-	cLigne.Format(_T("Resultat du transfert de Z fin(%d) a A (%d): niveau:  %d   \t"),level,  level+1, level);
-	m_listBox1.InsertString(-1, cLigne);
+	if (level < (m_number_layer-1))
+	{
+		cLigne.Format(_T("Resultat du transfert de Z fin(%d) a A (%d)   \t"), level-1, level);
+		m_listBox1.InsertString(-1, cLigne);
+	}
+	else
+	{
+		cLigne.Format(_T("Sortie:A ()   \t"));
+		m_listBox1.InsertString(-1, cLigne);
+	};
 
 	for (int i = 0; i < z.rows_; ++i)
 	{
@@ -589,6 +675,37 @@ void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, 
 	};
 };
 
+int CMFCMatrixAIAppDlg::GetNextSample(int theSampleNumber) 
+
+{
+// contenu a developper et ajouter;
+	Matrix* myMatrix;
+	CString cLigne;
+	sample mySample;
+
+	myMatrix = m_listPtrMatrix_activation.at(0);
+
+	mySample = m_samples_vector.at(theSampleNumber);
+
+	return mySample.input;
+};
+
+std::array<int,10> CMFCMatrixAIAppDlg::ConvertNextSampleToBinary(int theNextSample_input)
+{
+	std::array<int, 10> myArray;
+	int i;
+	for (i = 0; i < 10; i++)
+		myArray[i] = 0;
+
+	for (i = 0; theNextSample_input > 0; i++)
+	{
+		myArray[i] = theNextSample_input % 2;
+		theNextSample_input = theNextSample_input/2;
+	}
+
+	return myArray;
+};
+
 void CMFCMatrixAIAppDlg::OnBnClickedTest()
 {
 	// TODO: Add your control notification handler code here
@@ -598,28 +715,79 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	//multiplie matrice 1(Ao) avec matrice 2(Wo) et sauve le resultat dans matrice 3(Zo); ajoute le bias (Bo) a Zo, calcule le sigmoid, repete pour le niveau suivant.
 
 	CString cLigne;
+	int theNextSample_input;
 
-	for(int n= 0; n< (m_number_layer-1); n++)
+	std::array<int, 10> inputArray;
+
+	int sampleNumber = 0;
+	int sampleBitSize = _ttoi(m_str_SampleSize);
+
+	for (sampleNumber = 0; sampleNumber < sampleBitSize; sampleNumber++)
 	{
 
-		cLigne.Format(_T("Multiplication.  Niveau: %d  \t"),n);
+		cLigne.Format(_T("------------------\t"));
+		m_listBox1.InsertString(-1, cLigne);
+		
+		cLigne.Format(_T("Echantillon: %d  \t"), sampleNumber +1);
 		m_listBox1.InsertString(-1, cLigne);
 
-		multiplicationMatrice(*m_listPtrMatrix_activation.at(n), *m_listPtrMatrix_weight.at(n), *m_listPtrMatrix_z.at(n), n);
-
-		cLigne.Format(_T("Addition.        Niveau: %d \t"), n);
+		cLigne.Format(_T(" \t"));
 		m_listBox1.InsertString(-1, cLigne);
-		additionMatrice(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_bias.at(n), n);
 
-		cLigne.Format(_T("Sigmoid.         Niveau: % d \t"), n);
-		m_listBox1.InsertString(-1, cLigne);
-		sigmoidMatrice(*m_listPtrMatrix_z.at(n), n);
 
-		cLigne.Format(_T("Activation.  Niveau: %d  \t"),n+1);
+		theNextSample_input = GetNextSample(sampleNumber);
+
+		inputArray = ConvertNextSampleToBinary(theNextSample_input);
+
+		//CHANGER CECI POUR UNE FONCTION DE MATRIX : PLUS PROPRE...
+
+		for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
+		{
+			m_listPtrMatrix_activation.at(0)->p[0][j] = inputArray[j];
+		}
+
+		cLigne.Format(_T(" Matrice Entrée   %d  x %d  \t"), m_listPtrMatrix_activation.at(0)->rows_, m_listPtrMatrix_activation.at(0)->cols_);
 		m_listBox1.InsertString(-1, cLigne);
-		initialiseActivationNiveauSuivant(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_activation.at(n+1), n);
+
+		for (int i = 0; i < m_listPtrMatrix_activation.at(0)->rows_; ++i)
+		{
+
+
+			for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
+			{
+				cLigne.Format(_T("r:%d c:%d [ %6.3f]  \t"), i, j, m_listPtrMatrix_activation.at(0)->p[i][j]);
+				m_listBox1.InsertString(-1, cLigne); ;
+			}
+
+			cLigne.Format(_T("\t "));
+
+			m_listBox1.InsertString(-1, cLigne);
+		}
+		
+
+
+	//******************************************************************
+		for (int n = 0; n < (m_number_layer - 1); n++)
+		{
+
+			cLigne.Format(_T("Multiplication.  Niveau: %d  \t"), n);
+			m_listBox1.InsertString(-1, cLigne);
+
+			multiplicationMatrice(*m_listPtrMatrix_activation.at(n), *m_listPtrMatrix_weight.at(n), *m_listPtrMatrix_z.at(n), n);
+
+			cLigne.Format(_T("Addition.        Niveau: %d \t"), n);
+			m_listBox1.InsertString(-1, cLigne);
+			additionMatrice(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_bias.at(n), n);
+
+			cLigne.Format(_T("Sigmoid.         Niveau: % d \t"), n);
+			m_listBox1.InsertString(-1, cLigne);
+			sigmoidMatrice(*m_listPtrMatrix_z.at(n), n);
+
+			cLigne.Format(_T("Activation.  Niveau: %d  \t"), n + 1);
+			m_listBox1.InsertString(-1, cLigne);
+			initialiseActivationNiveauSuivant(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_activation.at(n + 1), n+1);
+		};
 	};
-	
 }
 
 void CMFCMatrixAIAppDlg::sigmoidMatrice(Matrix& z, int level)
@@ -634,7 +802,7 @@ void CMFCMatrixAIAppDlg::sigmoidMatrice(Matrix& z, int level)
 		};
 	};
 
-	cLigne.Format(_T("Resultat de la fonction sigmoid (%d) \t"), level);
+	cLigne.Format(_T("Fonction sigmoid sur: Z_fin.(%d) \t"), level);
 	m_listBox1.InsertString(-1, cLigne);
 
 	for (int i = 0; i < z.rows_; ++i)
@@ -651,3 +819,117 @@ void CMFCMatrixAIAppDlg::sigmoidMatrice(Matrix& z, int level)
 	};
 	
 };
+
+/*
+void CMenus2Dlg::OnBnClickedActiviteFBN()						// click sur bouton pour lire le fichier des activit�s FBN
+{
+	CFileDialog ldFile(TRUE);
+
+	if (ldFile.DoModal() == IDOK)
+	{
+		m_str_NOMFICHIEROUVERT = ldFile.GetFileName();
+		m_str_REPERTOIRE = ldFile.GetFolderPath();
+		m_str_REPERTOIRE = m_str_REPERTOIRE + L"\\";
+
+		m_FBNConverter.SetFBNActiviteFile(m_str_REPERTOIRE, m_str_NOMFICHIEROUVERT);		// class FBNConverter cr�e pour traiter les activit�s de FBN.
+
+		m_str_FBN_file = m_str_NOMFICHIEROUVERT;				// met le nom du fichier ouvert dans la variable qui sera affichee dans le dialogue sous: fichier FBN
+
+
+		UpdateData(FALSE);
+
+	};
+}
+*/
+
+void CMFCMatrixAIAppDlg::OnBnClickedOpentrainingdata()
+{
+	// TODO: Add your control notification handler code here
+
+	CFileDialog ldFile(TRUE);
+	std::ifstream fsIn;
+	CString cLigne;
+
+
+	/*void FBNConverter::SetFBNActiviteFile(CString nom_repertoire, CString nom_fichier)			// sauve le nom du fichier obtenu du site internet de la FBN
+{
+
+
+
+	std::string my_strRepertoireActiviteFBN(CW2A(nom_repertoire.GetString()));
+
+	my_strRepertoireActiviteFBN = my_strRepertoireActiviteFBN;
+
+	std::string my_strFichierActiviteFBN(CW2A(nom_fichier.GetString()));
+
+	my_strFichierActiviteFBN = my_strFichierActiviteFBN;
+
+	string repertoire = my_strRepertoireActiviteFBN + my_strFichierActiviteFBN;
+
+	m_FBNActiviteFile.open(repertoire, std::ifstream::in);
+
+};*/
+
+
+
+	if (ldFile.DoModal() == IDOK)
+	{
+		m_str_NOMFICHIEROUVERT = CW2A(ldFile.GetFileName());
+		m_str_REPERTOIRE = CW2A(ldFile.GetFolderPath());
+		m_str_REPERTOIRE = m_str_REPERTOIRE + L"\\";
+
+		
+		m_TrainingDataFile = m_str_REPERTOIRE + m_str_NOMFICHIEROUVERT;				// met le nom du fichier ouvert dans la variable qui sera affichee dans le dialogue sous: fichier FBN
+
+
+		
+
+		sampleStructure structureTestEcriture;
+
+		structureTestEcriture.numberOfSample = 0;			//nombre d'échantillons dans le fichier
+		structureTestEcriture.inputSampleBitSize = 0;		//nombre de neurons pour l'entrée
+		structureTestEcriture.outputSampleBitSize = 0;		//nombre de neurons pour la sortie  (étiquette de l'échantillon)
+
+		sample mySample;
+
+		mySample.input = 0;									//bits de l'échantillon (entrée du système)
+		mySample.output = 0;								//valeur attendue du système (pour comparer avec l'activation de sortie du système) (étiquette de l'échantillon)
+
+
+
+
+		fsIn.open(m_TrainingDataFile);
+
+		if (fsIn.is_open())
+		{
+			fsIn.read((char*)&structureTestEcriture, sizeof(structureTestEcriture));
+			
+			
+			for (int j = 0; j < structureTestEcriture.numberOfSample; j++)
+			{
+				fsIn.read((char*)&mySample, sizeof(mySample));
+				m_samples_vector.push_back(mySample);
+			};
+
+			fsIn.close();
+		}
+		else
+		{
+
+			cLigne.Format(_T(" Open Training Data: ne peut ouvrir un fichier pour lire les échantillons"));
+			m_listBox1.InsertString(-1, cLigne);
+		};
+
+
+		m_str_SampleSize.Format(_T("%d"),structureTestEcriture.numberOfSample);
+		m_str_NeuronPerSampleInput.Format(_T("%d"),structureTestEcriture.inputSampleBitSize);
+		mStr_layer_1_neurons.Format(_T("%d"),structureTestEcriture.inputSampleBitSize);
+		mStr_layer_5_neurons.Format(_T("%d"), structureTestEcriture.outputSampleBitSize);
+
+		
+	};
+
+	
+
+	UpdateData(FALSE);
+}
