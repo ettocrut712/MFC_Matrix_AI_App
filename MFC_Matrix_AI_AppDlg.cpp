@@ -492,7 +492,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreatetestinput()
 
 	structureTestEcriture.numberOfSample=3;
 	structureTestEcriture.inputSampleBitSize = 8;			//8 neurons comme entrée
-	structureTestEcriture.outputSampleBitSize = 3;			//3 neurons comme sortie
+	structureTestEcriture.outputSampleBitSize = 4;			//3 neurons comme sortie
 
 	sample mySample;
 
@@ -638,8 +638,8 @@ void CMFCMatrixAIAppDlg::additionMatrice(Matrix& z, Matrix& b, int level)		//Mat
 	};
 }
 
-void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, int level) //level = le niveau suivant pour activation
-{
+void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, int level) //level = le niveau suivant pour activation.  Transfert les sortie du niveau précédent en activation pour le niveau suivant.
+{																							// La matrice "z" est la sortie du niveau n-1.  La matrice "a" est l'activation pour le niveau suivant (n).
 	CString cLigne;
 	
 	for (int i = 0; i < z.rows_; ++i) {
@@ -675,20 +675,33 @@ void CMFCMatrixAIAppDlg::initialiseActivationNiveauSuivant(Matrix& z, Matrix&a, 
 	};
 };
 
-int CMFCMatrixAIAppDlg::GetNextSample(int theSampleNumber) 
+int CMFCMatrixAIAppDlg::GetNextSampleInput(int theSampleNumber) 
 
 {
 // contenu a developper et ajouter;
-	Matrix* myMatrix;
+	
 	CString cLigne;
 	sample mySample;
-
-	myMatrix = m_listPtrMatrix_activation.at(0);
 
 	mySample = m_samples_vector.at(theSampleNumber);
 
 	return mySample.input;
 };
+
+int CMFCMatrixAIAppDlg::GetNextSampleOutput(int theSampleNumber)
+
+{
+	// contenu a developper et ajouter;
+	
+	CString cLigne;
+	sample mySample;
+	
+	mySample = m_samples_vector.at(theSampleNumber);
+
+	return mySample.output;
+};
+
+
 
 std::array<int,10> CMFCMatrixAIAppDlg::ConvertNextSampleToBinary(int theNextSample_input)
 {
@@ -715,12 +728,13 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	//multiplie matrice 1(Ao) avec matrice 2(Wo) et sauve le resultat dans matrice 3(Zo); ajoute le bias (Bo) a Zo, calcule le sigmoid, repete pour le niveau suivant.
 
 	CString cLigne;
-	int theNextSample_input;
+	int theNextSample_input, theNextSample_output;
 
-	std::array<int, 10> inputArray;
+	std::array<int, 10> inputArray, outputArray;
 
 	int sampleNumber = 0;
 	int sampleBitSize = _ttoi(m_str_SampleSize);
+	m_fCostFunctionError = 0.0;
 
 	for (sampleNumber = 0; sampleNumber < sampleBitSize; sampleNumber++)
 	{
@@ -735,15 +749,15 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 		m_listBox1.InsertString(-1, cLigne);
 
 
-		theNextSample_input = GetNextSample(sampleNumber);
+		theNextSample_input = GetNextSampleInput(sampleNumber);
 
-		inputArray = ConvertNextSampleToBinary(theNextSample_input);
+		inputArray = ConvertNextSampleToBinary(theNextSample_input);									//convertit la valeur de test : nombre entre 0-255, en valeur binaire.  Chaque bit correspond à 1 entrée du réseau.
 
 		//CHANGER CECI POUR UNE FONCTION DE MATRIX : PLUS PROPRE...
 
 		for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
 		{
-			m_listPtrMatrix_activation.at(0)->p[0][j] = inputArray[j];
+			m_listPtrMatrix_activation.at(0)->p[0][j] = inputArray[j];									// lire les valeurs des données à utiliser comme entrées du réseau
 		}
 
 		cLigne.Format(_T(" Matrice Entrée   %d  x %d  \t"), m_listPtrMatrix_activation.at(0)->rows_, m_listPtrMatrix_activation.at(0)->cols_);
@@ -787,7 +801,27 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 			m_listBox1.InsertString(-1, cLigne);
 			initialiseActivationNiveauSuivant(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_activation.at(n + 1), n+1);
 		};
-	};
+
+		// Calcule l'erreur pour cet échantillon et fait la sommation.
+
+		theNextSample_output = GetNextSampleOutput(sampleNumber);
+
+		outputArray = ConvertNextSampleToBinary(theNextSample_output);
+
+		for (int output = 0; output < m_structureTestEcriture.outputSampleBitSize  ; output++)
+		{
+			m_fCostFunctionError = pow((outputArray[output] - m_listPtrMatrix_activation.at(m_number_layer-1)->p[0][output]),2);
+
+		};
+		
+		
+
+	
+	}; // fin du traitement des échantillons.  Debut des ajustements (backpropagation)
+		cLigne.Format(_T("Cost function (erreur) : %6.4f  \t"), m_fCostFunctionError);
+	m_listBox1.InsertString(-1, cLigne);
+	
+
 }
 
 void CMFCMatrixAIAppDlg::sigmoidMatrice(Matrix& z, int level)
@@ -884,11 +918,9 @@ void CMFCMatrixAIAppDlg::OnBnClickedOpentrainingdata()
 
 		
 
-		sampleStructure structureTestEcriture;
-
-		structureTestEcriture.numberOfSample = 0;			//nombre d'échantillons dans le fichier
-		structureTestEcriture.inputSampleBitSize = 0;		//nombre de neurons pour l'entrée
-		structureTestEcriture.outputSampleBitSize = 0;		//nombre de neurons pour la sortie  (étiquette de l'échantillon)
+		m_structureTestEcriture.numberOfSample = 0;			//nombre d'échantillons dans le fichier
+		m_structureTestEcriture.inputSampleBitSize = 0;		//nombre de neurons pour l'entrée
+		m_structureTestEcriture.outputSampleBitSize = 0;		//nombre de neurons pour la sortie  (étiquette de l'échantillon)
 
 		sample mySample;
 
@@ -902,10 +934,10 @@ void CMFCMatrixAIAppDlg::OnBnClickedOpentrainingdata()
 
 		if (fsIn.is_open())
 		{
-			fsIn.read((char*)&structureTestEcriture, sizeof(structureTestEcriture));
+			fsIn.read((char*)&m_structureTestEcriture, sizeof(m_structureTestEcriture));  // lire nombre d'échantillons, nombre de bits pour entrée, nombre de bits pour sortie.
 			
 			
-			for (int j = 0; j < structureTestEcriture.numberOfSample; j++)
+			for (int j = 0; j < m_structureTestEcriture.numberOfSample; j++)				// pour chaque échantillon, lire l'entrée(couche 0) et la sortie.
 			{
 				fsIn.read((char*)&mySample, sizeof(mySample));
 				m_samples_vector.push_back(mySample);
@@ -921,10 +953,10 @@ void CMFCMatrixAIAppDlg::OnBnClickedOpentrainingdata()
 		};
 
 
-		m_str_SampleSize.Format(_T("%d"),structureTestEcriture.numberOfSample);
-		m_str_NeuronPerSampleInput.Format(_T("%d"),structureTestEcriture.inputSampleBitSize);
-		mStr_layer_1_neurons.Format(_T("%d"),structureTestEcriture.inputSampleBitSize);
-		mStr_layer_5_neurons.Format(_T("%d"), structureTestEcriture.outputSampleBitSize);
+		m_str_SampleSize.Format(_T("%d"), m_structureTestEcriture.numberOfSample);
+		m_str_NeuronPerSampleInput.Format(_T("%d"), m_structureTestEcriture.inputSampleBitSize);
+		mStr_layer_1_neurons.Format(_T("%d"), m_structureTestEcriture.inputSampleBitSize);
+		mStr_layer_5_neurons.Format(_T("%d"), m_structureTestEcriture.outputSampleBitSize);
 
 		
 	};

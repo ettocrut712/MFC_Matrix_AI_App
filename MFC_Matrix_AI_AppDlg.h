@@ -79,13 +79,17 @@ public:
 		int output;
 	};
 
+	sampleStructure m_structureTestEcriture;
 
 	CListBox m_listBox1;
 	afx_msg void OnBnClickedCreatetestinput();
 	afx_msg void OnBnClickedTest();
 	afx_msg void OnBnClickedOpentrainingdata();
 
-	int GetNextSample(int theSampleNumber);
+	int GetNextSampleInput(int theSampleNumber);
+	int GetNextSampleOutput(int theSampleNumber);
+
+
 
 	std::array<int,10> ConvertNextSampleToBinary(int sampleInputDecimal);
 
@@ -94,5 +98,6 @@ public:
 	CString m_str_NeuronPerSampleInput;
 	CString m_str_TrainingTours;
 	std::vector<sample> m_samples_vector;
+	float m_fCostFunctionError;
 
 };
