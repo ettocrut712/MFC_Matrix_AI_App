@@ -68,6 +68,9 @@ CMFCMatrixAIAppDlg::CMFCMatrixAIAppDlg(CWnd* pParent /*=nullptr*/)
 	, m_TrainingDataFile(_T(""))
 	, m_str_SampleSize(_T(""))
 	, m_str_NeuronPerSampleInput(_T(""))
+	, m_strTraining_tours(_T(""))
+	
+	, m_str_learning_rate(_T(""))
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -84,6 +87,10 @@ void CMFCMatrixAIAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_TrainingDataFile, m_TrainingDataFile);
 	DDX_Text(pDX, IDC_str_SampleSize, m_str_SampleSize);
 	DDX_Text(pDX, IDC_str_NeuronPerSampleInput, m_str_NeuronPerSampleInput);
+	DDX_Text(pDX, IDC_EDIT_TRAINING_TOURS, m_strTraining_tours);
+
+	DDX_Control(pDX, IDC_LIST_COST_FUNCTION, m_listbox_cost_function);
+	DDX_Text(pDX, IDC_EDIT2, m_str_learning_rate);
 }
 
 BEGIN_MESSAGE_MAP(CMFCMatrixAIAppDlg, CDialogEx)
@@ -141,6 +148,7 @@ BOOL CMFCMatrixAIAppDlg::OnInitDialog()
 	mStr_layer_5_neurons = "0";
 	m_str_SampleSize = "0";
 	m_str_NeuronPerSampleInput ="0";
+	m_str_learning_rate.Format(_T("%5.3f ",learning_rate));
 
 
 
@@ -736,92 +744,162 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	int sampleBitSize = _ttoi(m_str_SampleSize);
 	m_fCostFunctionError = 0.0;
 
-	for (sampleNumber = 0; sampleNumber < sampleBitSize; sampleNumber++)
+	for (int tours = 0; tours < _wtoi(m_strTraining_tours); tours++)
 	{
 
-		cLigne.Format(_T("------------------\t"));
-		m_listBox1.InsertString(-1, cLigne);
-		
-		cLigne.Format(_T("Echantillon: %d  \t"), sampleNumber +1);
-		m_listBox1.InsertString(-1, cLigne);
-
-		cLigne.Format(_T(" \t"));
-		m_listBox1.InsertString(-1, cLigne);
-
-
-		theNextSample_input = GetNextSampleInput(sampleNumber);
-
-		inputArray = ConvertNextSampleToBinary(theNextSample_input);									//convertit la valeur de test : nombre entre 0-255, en valeur binaire.  Chaque bit correspond à 1 entrée du réseau.
-
-		//CHANGER CECI POUR UNE FONCTION DE MATRIX : PLUS PROPRE...
-
-		for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
-		{
-			m_listPtrMatrix_activation.at(0)->p[0][j] = inputArray[j];									// lire les valeurs des données à utiliser comme entrées du réseau
-		}
-
-		cLigne.Format(_T(" Matrice Entrée   %d  x %d  \t"), m_listPtrMatrix_activation.at(0)->rows_, m_listPtrMatrix_activation.at(0)->cols_);
-		m_listBox1.InsertString(-1, cLigne);
-
-		for (int i = 0; i < m_listPtrMatrix_activation.at(0)->rows_; ++i)
+		for (sampleNumber = 0; sampleNumber < sampleBitSize; sampleNumber++)
 		{
 
+			cLigne.Format(_T("------------------\t"));
+			m_listBox1.InsertString(-1, cLigne);
+
+			cLigne.Format(_T("Echantillon: %d  \t"), sampleNumber + 1);
+			m_listBox1.InsertString(-1, cLigne);
+
+			cLigne.Format(_T(" \t"));
+			m_listBox1.InsertString(-1, cLigne);
+
+
+			theNextSample_input = GetNextSampleInput(sampleNumber);
+
+			inputArray = ConvertNextSampleToBinary(theNextSample_input);									//convertit la valeur de test : nombre entre 0-255, en valeur binaire.  Chaque bit correspond à 1 entrée du réseau.
+
+			//CHANGER CECI POUR UNE FONCTION DE MATRIX : PLUS PROPRE...
 
 			for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
 			{
-				cLigne.Format(_T("r:%d c:%d [ %6.3f]  \t"), i, j, m_listPtrMatrix_activation.at(0)->p[i][j]);
-				m_listBox1.InsertString(-1, cLigne); ;
+				m_listPtrMatrix_activation.at(0)->p[0][j] = inputArray[j];									// lire les valeurs des données à utiliser comme entrées du réseau
 			}
 
-			cLigne.Format(_T("\t "));
-
+			cLigne.Format(_T(" Matrice Entrée   %d  x %d  \t"), m_listPtrMatrix_activation.at(0)->rows_, m_listPtrMatrix_activation.at(0)->cols_);
 			m_listBox1.InsertString(-1, cLigne);
-		}
+
+			for (int i = 0; i < m_listPtrMatrix_activation.at(0)->rows_; ++i)
+			{
+
+
+				for (int j = 0; j < m_listPtrMatrix_activation.at(0)->cols_; ++j)
+				{
+					cLigne.Format(_T("r:%d c:%d [ %6.3f]  \t"), i, j, m_listPtrMatrix_activation.at(0)->p[i][j]);
+					m_listBox1.InsertString(-1, cLigne); ;
+				}
+
+				cLigne.Format(_T("\t "));
+
+				m_listBox1.InsertString(-1, cLigne);
+			}
+
+
+
+			//******************************************************************
+			for (int n = 0; n < (m_number_layer - 1); n++)
+			{
+
+				cLigne.Format(_T("Multiplication.  Niveau: %d  \t"), n);
+				m_listBox1.InsertString(-1, cLigne);
+
+				multiplicationMatrice(*m_listPtrMatrix_activation.at(n), *m_listPtrMatrix_weight.at(n), *m_listPtrMatrix_z.at(n), n);
+
+				cLigne.Format(_T("Addition.        Niveau: %d \t"), n);
+				m_listBox1.InsertString(-1, cLigne);
+				additionMatrice(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_bias.at(n), n);
+
+				cLigne.Format(_T("Sigmoid.         Niveau: % d \t"), n);
+				m_listBox1.InsertString(-1, cLigne);
+				sigmoidMatrice(*m_listPtrMatrix_z.at(n), n);
+
+				cLigne.Format(_T("Activation.  Niveau: %d  \t"), n + 1);
+				m_listBox1.InsertString(-1, cLigne);
+				initialiseActivationNiveauSuivant(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_activation.at(n + 1), n + 1);
+			};
+
+			// Calcule l'erreur pour cet échantillon et fait la sommation.
+
+			theNextSample_output = GetNextSampleOutput(sampleNumber);
+
+			outputArray = ConvertNextSampleToBinary(theNextSample_output);
+
+			for (int output = 0; output < m_structureTestEcriture.outputSampleBitSize; output++)
+			{
+				m_fCostFunctionError = pow((outputArray[output] - m_listPtrMatrix_activation.at(m_number_layer - 1)->p[0][output]), 2);
+
+			};
+
+
+
+
+		}; // fin du traitement des échantillons.  Debut des ajustements (backpropagation)
+
+
+		cLigne.Format(_T("Tour %d   erreur : %6.4f  \t"),tours, m_fCostFunctionError);
+		m_listbox_cost_function.InsertString(-1, cLigne);
 		
 
+		//Calcul de la variation de la pondération (W-L/jk)
 
-	//******************************************************************
-		for (int n = 0; n < (m_number_layer - 1); n++)
-		{
+		// dC/dW-L/jk = 2*(A-L/j -C)*A-L/j(1-A-L/j)*A-(L-1)/k
 
-			cLigne.Format(_T("Multiplication.  Niveau: %d  \t"), n);
-			m_listBox1.InsertString(-1, cLigne);
+		double activation_x_L0 = 0.0;			//temporaire  activation à la couche "L"
+		double activation_x_Lminus = 0.0;	//temporaire  activation a la couche "L-1"
+		double weight_x = 0.0;				//temporaire
+		double bias_x = 0.0;				//temporaire
 
-			multiplicationMatrice(*m_listPtrMatrix_activation.at(n), *m_listPtrMatrix_weight.at(n), *m_listPtrMatrix_z.at(n), n);
+		int neuron_L = 0;
+		int neuron_Lminus = 0;
+		double error_jth_Neuron_L_Layer, derivative_weight, derivative_bias;
+		/*
 
-			cLigne.Format(_T("Addition.        Niveau: %d \t"), n);
-			m_listBox1.InsertString(-1, cLigne);
-			additionMatrice(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_bias.at(n), n);
+		std::vector<Matrix*> m_listPtrMatrix_weight;
+		std::vector<Matrix*> m_listPtrMatrix_bias;
+		std::vector<Matrix*> m_listPtrMatrix_z;
+		std::vector<Matrix*> m_listPtrMatrix_activation;
 
-			cLigne.Format(_T("Sigmoid.         Niveau: % d \t"), n);
-			m_listBox1.InsertString(-1, cLigne);
-			sigmoidMatrice(*m_listPtrMatrix_z.at(n), n);
 
-			cLigne.Format(_T("Activation.  Niveau: %d  \t"), n + 1);
-			m_listBox1.InsertString(-1, cLigne);
-			initialiseActivationNiveauSuivant(*m_listPtrMatrix_z.at(n), *m_listPtrMatrix_activation.at(n + 1), n+1);
-		};
+		myMatrix->rows_, myMatrix->cols_
 
-		// Calcule l'erreur pour cet échantillon et fait la sommation.
 
-		theNextSample_output = GetNextSampleOutput(sampleNumber);
-
-		outputArray = ConvertNextSampleToBinary(theNextSample_output);
-
-		for (int output = 0; output < m_structureTestEcriture.outputSampleBitSize  ; output++)
-		{
-			m_fCostFunctionError = pow((outputArray[output] - m_listPtrMatrix_activation.at(m_number_layer-1)->p[0][output]),2);
-
-		};
+		m_neuron_per_layer[10]
+		*/
 		
 		
+			
+		int matrix_layers = m_listPtrMatrix_weight.size() -1;						// les matrices weight et bias sont comprises entre les couches et leur nombre est: nombre de couche  moins un(1). Ici, on lit la grosseur de l'array.
+																					// première matrice = matrice[0], seconde matrice = matrice[1], derniere matrice = matrice[m_number_layer - 1]
+		
+		int layer = m_number_layer-1;												// Ici on cherche la derniere couche (la sortie) et on recule : back propagation...
 
-	
-	}; // fin du traitement des échantillons.  Debut des ajustements (backpropagation)
-		cLigne.Format(_T("Cost function (erreur) : %6.4f  \t"), m_fCostFunctionError);
-	m_listBox1.InsertString(-1, cLigne);
-	
+		/*for (int layer = m_number_layer - 1; layer > 1; layer--)
+		{*/
+			for (neuron_L = 0; neuron_L < m_neuron_per_layer[layer]; neuron_L++)	// layer -1 : parce que le compteur commence a zero...ICI: nombre de neurones dans la couche "L" 
+																					// La derniere couche (sortie) = m_neuron_per_layer[layer-1], la premiere couche(entrée) = m_neuron_per_layer[0]
+			{
+				activation_x_L0 = m_listPtrMatrix_activation.at(layer)->p[0][neuron_L];				//valeur de l'activation de la couche "L"
 
+				error_jth_Neuron_L_Layer = 2 * (activation_x_L0 - m_fCostFunctionError) * activation_x_L0 * (1 - activation_x_L0);
+
+
+
+				for (neuron_Lminus = 0; neuron_Lminus < m_neuron_per_layer[layer - 1]; neuron_Lminus++)  // Nombre de neurones dans la couche "L minus one"
+				{
+					bias_x = m_listPtrMatrix_bias.at(layer-1)->p[0][neuron_L];
+					
+
+
+				
+					weight_x = m_listPtrMatrix_weight.at(layer-1)->p[neuron_Lminus][neuron_L];
+
+					activation_x_Lminus =  m_listPtrMatrix_activation.at(layer - 1)->p[0][neuron_Lminus];
+
+					m_listPtrMatrix_weight.at(layer-1)->p[neuron_Lminus][neuron_L] = weight_x - learning_rate * error_jth_Neuron_L_Layer * activation_x_Lminus;
+					m_listPtrMatrix_bias.at(layer-1)->p[0][neuron_L] = bias_x - learning_rate * error_jth_Neuron_L_Layer;
+				};
+			};
+
+
+		/*};*/
+
+
+	}; // For(nombre de tours d'apprentissage: m_strTraining_tours
 }
 
 void CMFCMatrixAIAppDlg::sigmoidMatrice(Matrix& z, int level)

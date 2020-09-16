@@ -82,6 +82,8 @@ public:
 	sampleStructure m_structureTestEcriture;
 
 	CListBox m_listBox1;
+	CListBox m_listbox_cost_function;
+
 	afx_msg void OnBnClickedCreatetestinput();
 	afx_msg void OnBnClickedTest();
 	afx_msg void OnBnClickedOpentrainingdata();
@@ -96,8 +98,13 @@ public:
 	CString m_TrainingDataFile;
 	CString m_str_SampleSize;
 	CString m_str_NeuronPerSampleInput;
-	CString m_str_TrainingTours;
 	std::vector<sample> m_samples_vector;
-	float m_fCostFunctionError;
+	double m_fCostFunctionError;
+	double learning_rate=0.5;
 
+	
+	CString m_strTraining_tours;
+
+
+	CString m_str_learning_rate;
 };

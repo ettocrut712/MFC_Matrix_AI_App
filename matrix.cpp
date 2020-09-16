@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include <math.h>
 #include <random>
+#include<time.h>
 
 
 //#include "pch.h"
@@ -600,7 +601,7 @@ void Matrix::init_bias_and_weight()
     // genere une distribution "normal" de nombre aleatoire.  parametres:  "distribution(moyenne=0.0, deviation_standard= 1.0)"
     
 
-    std::default_random_engine generator;
+    std::default_random_engine generator{ static_cast<long unsigned int>(time(0)) };;
     std::normal_distribution<double> distribution(0.0, 1.0);
     
     for (int i = 0; i < rows_; ++i)
@@ -618,8 +619,10 @@ void Matrix::init_activation_and_z()
     // Mets tous les parametres a zero"
 
 
-    std::default_random_engine generator;
+    std::default_random_engine generator{ static_cast<long unsigned int>(time(0))};
     std::normal_distribution<double> distribution(0.0, 1.0);
+
+
 
     for (int i = 0; i < rows_; ++i)
     {
