@@ -7,6 +7,9 @@
 #include <math.h>
 #include <random>
 #include<time.h>
+#include <Windows.h>
+#include <stdint.h>
+
 
 
 //#include "pch.h"
@@ -599,15 +602,24 @@ std::istream& operator>>(std::istream& is, Matrix& m)
 void Matrix::init_bias_and_weight()
 {
     // genere une distribution "normal" de nombre aleatoire.  parametres:  "distribution(moyenne=0.0, deviation_standard= 1.0)"
-    
+    time_t timer;
+    double seconds;
+    struct tm y2k = { 0 };
 
-    std::default_random_engine generator{ static_cast<long unsigned int>(time(0)) };;
+    int counter = 0;
+
+    SYSTEMTIME time;
+    GetSystemTime(&time);
+    long time_ms = (time.wSecond * 1000) + time.wMilliseconds;
+
+    std::default_random_engine generator{ static_cast<long unsigned int>(time_ms) };
     std::normal_distribution<double> distribution(0.0, 1.0);
     
     for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
         {
+
             p[i][j] = distribution(generator);
         }
     }
