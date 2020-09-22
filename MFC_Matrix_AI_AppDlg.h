@@ -57,11 +57,14 @@ public:
 	std::vector<Matrix*> m_listPtrMatrix_bias;
 	std::vector<Matrix*> m_listPtrMatrix_z;
 	std::vector<Matrix*> m_listPtrMatrix_activation;
+	std::vector<Matrix*> m_listPtrMatrix_newWeight;
+	std::vector<Matrix*> m_listPtrMatrix_newBias;
 
 
 	int m_neuron_per_layer[10] = { 0 };
 
 	void multiplicationMatrice(Matrix&, Matrix&, Matrix&, int n);
+	void copieMatrice(Matrix& source, Matrix& destination);
 	void additionMatrice(Matrix&, Matrix&, int n);
 	void sigmoidMatrice(Matrix&, int n);
 	void initialiseActivationNiveauSuivant(Matrix&, Matrix&, int n);
@@ -107,4 +110,6 @@ public:
 
 
 	CString m_str_learning_rate;
+	CString m_display_tour;
+	CString m_display_erreur;
 };
