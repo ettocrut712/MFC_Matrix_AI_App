@@ -6,6 +6,11 @@
 #define __MATRIX_H__
 
 #include <iostream>
+#include <string>
+#include <cstring>
+#include <fstream>
+#include <atlstr.h>
+
 
 
 
@@ -57,7 +62,8 @@ public:
     void multiplication(Matrix&, Matrix&, Matrix&);
     void init_bias_and_weight();
     void init_activation_and_z();
-
+    void printTheMatrixToFile(LPCTSTR leRepertoire, LPCTSTR leFilename);
+   
     
    
 
@@ -71,5 +77,7 @@ Matrix operator*(const Matrix&, const Matrix&);
 Matrix operator*(const Matrix&, double);
 Matrix operator*(double, const Matrix&);
 Matrix operator/(const Matrix&, double);
+
+
 
 #endif

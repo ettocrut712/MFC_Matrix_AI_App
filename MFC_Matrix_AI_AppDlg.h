@@ -104,6 +104,7 @@ public:
 	CString m_outputDataFile;
 	CString m_str_SampleSize;
 	CString m_str_NeuronPerSampleInput;
+
 	std::vector<sample> m_samples_vector;
 	double m_fCostFunctionError;
 	double learning_rate=0.5;

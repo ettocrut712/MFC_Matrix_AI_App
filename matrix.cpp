@@ -6,9 +6,12 @@
 #include "matrix.h"
 #include <math.h>
 #include <random>
-#include<time.h>
+#include <time.h>
 #include <Windows.h>
 #include <stdint.h>
+#include <string.h>
+#include <cstring>
+
 
 
 
@@ -516,10 +519,11 @@ Matrix Matrix::inverse()
 void Matrix::allocSpace()
 {
     p = new double* [rows_];
-    for (int i = 0; i < rows_; ++i) {
+    for (int i = 0; i < rows_; ++i)
+    {
         p[i] = new double[cols_];
-    }
-}
+    };
+};
 
 Matrix Matrix::expHelper(const Matrix& m, int num)
 {
@@ -534,8 +538,8 @@ Matrix Matrix::expHelper(const Matrix& m, int num)
     }
     else {                    // num is odd
         return m * expHelper(m * m, (num - 1) / 2);
-    }
-}
+    };
+};
 
 /* NON-MEMBER FUNCTIONS
  ********************************/
@@ -544,13 +548,13 @@ Matrix operator+(const Matrix& m1, const Matrix& m2)
 {
     Matrix temp(m1);
     return (temp += m2);
-}
+};
 
 Matrix operator-(const Matrix& m1, const Matrix& m2)
 {
     Matrix temp(m1);
     return (temp -= m2);
-}
+};
 
 Matrix operator*(const Matrix& m1, const Matrix& m2)
 {
@@ -562,40 +566,40 @@ Matrix operator*(const Matrix& m, double num)
 {
     Matrix temp(m);
     return (temp *= num);
-}
+};
 
 Matrix operator*(double num, const Matrix& m)
 {
     return (m * num);
-}
+};
 
 Matrix operator/(const Matrix& m, double num)
 {
     Matrix temp(m);
     return (temp /= num);
-}
+};
 
- std::ostream& operator<< (std::ostream& os, const Matrix& m)
+std::ostream& operator<< (std::ostream& os, const Matrix& m)
 {
     for (int i = 0; i < m.rows_; ++i) {
         os << m.p[i][0];
         for (int j = 1; j < m.cols_; ++j) {
             os << " " << m.p[i][j];
-        }
+        };
         os << std::endl;
-    }
+    };
     return os;
-}
+};
 
 std::istream& operator>>(std::istream& is, Matrix& m)
 {
     for (int i = 0; i < m.rows_; ++i) {
         for (int j = 0; j < m.cols_; ++j) {
             is >> m.p[i][j];
-        }
-    }
+        };
+    };
     return is;
-}
+};
 
 
 void Matrix::init_bias_and_weight()
@@ -620,8 +624,8 @@ void Matrix::init_bias_and_weight()
         {
 
             p[i][j] = distribution(generator);
-        }
-    }
+        };
+    };
     
 };
 
@@ -630,7 +634,7 @@ void Matrix::init_activation_and_z()
     // Mets tous les parametres a zero"
 
 
-    std::default_random_engine generator{ static_cast<long unsigned int>(time(0))};
+    std::default_random_engine generator{ static_cast<long unsigned int>(time(0)) };
     std::normal_distribution<double> distribution(0.0, 1.0);
 
 
@@ -640,7 +644,40 @@ void Matrix::init_activation_and_z()
         for (int j = 0; j < cols_; ++j)
         {
             p[i][j] = 0.0;
-        }
-    }
+        };
+    };
 
+};
+
+
+void Matrix::printTheMatrixToFile(LPCTSTR leRepertoire, LPCTSTR leFilename)
+{
+    CString outputDataFile;
+        
+    CString repertoire(leRepertoire);
+    CString filename(leFilename);
+    
+    std::string s_valeur;
+   
+   
+
+    outputDataFile = repertoire + filename;
+
+    std::ofstream fileOutputStream;
+
+   fileOutputStream.open(outputDataFile);
+
+    
+
+
+   for (int i = 0; i < rows_; ++i)
+   {
+       for (int j = 0; j < cols_; ++j)
+       {
+           s_valeur = std::to_string(p[i][j]) + ",";
+           fileOutputStream << s_valeur;
+       };
+   };
+
+    fileOutputStream.close();
 };

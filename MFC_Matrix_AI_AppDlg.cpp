@@ -852,7 +852,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	
 	double bias_x , weight_x= 0.0;		// bias et weight actuel (avant modification)
 	
-	int neuron_destination, neuron_source = 0;
+	
 	int neuron_L_source, neuron_L_destination = 0;
 	
 	double error_jth_Neuron_L_Layer;
@@ -1004,7 +1004,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 			{
 				
 				
-				if (layer == m_number_layer - 1)																						// couche = layer "0" ou L0 = sortie
+				if (layer == (m_number_layer - 1))																						// couche = layer "0" ou L0 = sortie
 				{
 					activation_x_L0 = m_listPtrMatrix_activation.at(layer)->p[0][neuron_L_destination];
 					error_jth_Neuron_L_Layer = (activation_x_L0 - m_double_outputArray_Y[neuron_L_destination]) * activation_x_L0 * (1 - activation_x_L0);
@@ -1083,188 +1083,12 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 					};
 
 
-				};
-			};
+				};  // for neuron_L_source
 
+			}; // for neuron_L_destination
 
-		};
-			/*
-			//****************************************
-			layer = m_number_layer - 2;												// Ici on cherche les ajustements pour la premiere couche cachée (hidden layer )  et on recule : back propagation...
-			//****************************************
+		};// for layer...
 
-		
-			int neuron_source, neuron_destination, neuron_sortie;
-			double temp_activation_1, temp_activation_2, erreur_cumulative, new_weight, new_bias;
-
-			for (neuron_source = 0; neuron_source < m_neuron_per_layer[m_number_layer - 3]; neuron_source++)	// "m_number_layer - 1" est le max: parce que le compteur commence a zero...m_neuron_per_layer[layer]: nombre de neurones dans la couche "L-2" 
-																					
-			{
-				
-				for (neuron_destination = 0; neuron_destination < m_neuron_per_layer[m_number_layer - 2]; neuron_destination++)
-
-				{
-				
-					
-					weight_x = m_listPtrMatrix_weight.at(m_number_layer - 2)->p[neuron_source][neuron_destination];		// weight du niveau L-1
-					temp_activation_2 = m_listPtrMatrix_activation.at(m_number_layer - 3)->p[0][neuron_source];			// va chercher l'activation de la couche L-2
-					temp_activation_1 = m_listPtrMatrix_activation.at(m_number_layer - 2)->p[0][neuron_source];			// va chercher l'activation de la couche L-1
-					erreur_cumulative = calcul_erreur_cumul_L_minus_1(neuron_destination);
-				
-					new_weight = weight_x - learning_rate * erreur_cumulative * temp_activation_1 * (1 - temp_activation_1) * temp_activation_2;
-					
-					m_listPtrMatrix_newWeight.at(m_number_layer - 2)->p[neuron_source][neuron_destination] = new_weight;
-
-				
-					bias_x = m_listPtrMatrix_bias.at(m_number_layer - 2)->p[0][neuron_destination];		// bias du niveau L-1
-
-					new_bias = bias_x - learning_rate * erreur_cumulative * temp_activation_1 * (1 - temp_activation_1);
-					
-					m_listPtrMatrix_newBias.at(m_number_layer - 2)->p[0][neuron_destination] = new_bias;
-
-	
-					
-				};
-			};
-
-			
-
-			if (m_bool_verbose)
-			{
-				
-				cLigne.Format(_T("  \t"));
-				m_listBox1.InsertString(-1, cLigne);
-
-				cLigne.Format(_T(" Matrice old W(%d ) \t"), m_number_layer - 1);
-				m_listBox1.InsertString(-1, cLigne);
-
-				cLigne.Format(_T("  \t"));
-
-				for (int i = 0; i < m_listPtrMatrix_weight.at(m_number_layer - 1)->rows_; ++i)  // couche L
-				{
-
-					for (int j = 0; j < m_listPtrMatrix_weight.at(m_number_layer - 1)->cols_; ++j)
-					{
-						cLigne.Format(_T("r:%d c:%d [ %6.3f] "), i, j, m_listPtrMatrix_weight.at(m_number_layer - 1)->p[i][j]);			// pour une rangee, affiche chaque colonne(col) de la matrice
-						m_listBox1.InsertString(-1, cLigne);
-					}
-
-					cLigne.Format(_T("\t "));
-
-					m_listBox1.InsertString(-1, cLigne);
-				}
-
-
-				cLigne.Format(_T(" Matrice new W(%d ) \t"), m_number_layer - 1);
-				m_listBox1.InsertString(-1, cLigne);
-
-				cLigne.Format(_T("  \t"));
-
-				for (int i = 0; i < m_listPtrMatrix_newWeight.at(m_number_layer - 1)->rows_; ++i)
-				{
-
-					for (int j = 0; j < m_listPtrMatrix_newWeight.at(m_number_layer - 1)->cols_; ++j)
-					{
-						cLigne.Format(_T("r:%d c:%d [ %6.3f] "), i, j, m_listPtrMatrix_newWeight.at(m_number_layer - 1)->p[i][j]);			// pour une rangee, affiche chaque colonne(col) de la matrice
-						m_listBox1.InsertString(-1, cLigne);
-					}
-
-					cLigne.Format(_T("\t "));
-
-					m_listBox1.InsertString(-1, cLigne);
-				}
-
-					cLigne.Format(_T("  \t"));
-					m_listBox1.InsertString(-1, cLigne);
-
-					cLigne.Format(_T(" Matrice old W(%d ) \t"), m_number_layer - 2);  // couche L-1
-					m_listBox1.InsertString(-1, cLigne);
-
-					cLigne.Format(_T("  \t"));
-
-
-					for (int i = 0; i < m_listPtrMatrix_weight.at(m_number_layer - 2)->rows_; ++i)
-					{
-
-						for (int j = 0; j < m_listPtrMatrix_weight.at(m_number_layer - 2)->cols_; ++j)
-						{
-							cLigne.Format(_T("r:%d c:%d [ %8.6f] "), i, j, m_listPtrMatrix_weight.at(m_number_layer - 2)->p[i][j]);			// pour une rangee, affiche chaque colonne(col) de la matrice
-							m_listBox1.InsertString(-1, cLigne);
-						}
-
-						cLigne.Format(_T("\t "));
-
-						m_listBox1.InsertString(-1, cLigne);
-					}
-
-
-					cLigne.Format(_T(" Matrice new W(%d) \t"), m_number_layer - 2);
-					m_listBox1.InsertString(-1, cLigne);
-
-					cLigne.Format(_T("  \t"));
-
-					for (int i = 0; i < m_listPtrMatrix_newWeight.at(m_number_layer - 2)->rows_; ++i)
-					{
-
-						for (int j = 0; j < m_listPtrMatrix_newWeight.at(m_number_layer - 2)->cols_; ++j)
-						{
-							cLigne.Format(_T("r:%d c:%d [ %8.6f] "), i, j, m_listPtrMatrix_newWeight.at(m_number_layer - 2)->p[i][j]);			// pour une rangee, affiche chaque colonne(col) de la matrice
-							m_listBox1.InsertString(-1, cLigne);
-						}
-
-						cLigne.Format(_T("\t "));
-
-						m_listBox1.InsertString(-1, cLigne);
-					}
-				
-
-
-			};
-				
-			//*************************** L-3 *************************
-
-
-			//****************************************
-			layer = m_number_layer - 3;												// Ici on cherche les ajustements pour la deuxieme couche cachée (hidden layer )  et on recule : back propagation...
-			//****************************************
-
-
-			int neuron_source, neuron_destination, neuron_sortie;
-			double temp_activation_1, temp_activation_2, erreur_cumulative, new_weight, new_bias;
-
-			for (neuron_source = 0; neuron_source < m_neuron_per_layer[m_number_layer - 4]; neuron_source++)	// "m_number_layer - 1" est le max: parce que le compteur commence a zero...m_neuron_per_layer[layer]: nombre de neurones dans la couche "L-2" 
-
-			{
-
-				for (neuron_destination = 0; neuron_destination < m_neuron_per_layer[m_number_layer - 3]; neuron_destination++)
-
-				{
-
-
-					weight_x = m_listPtrMatrix_weight.at(m_number_layer - 3)->p[neuron_source][neuron_destination];		// weight du niveau L-2
-					temp_activation_2 = m_listPtrMatrix_activation.at(m_number_layer - 4)->p[0][neuron_source];			// va chercher l'activation de la couche L-3
-					temp_activation_1 = m_listPtrMatrix_activation.at(m_number_layer - 3)->p[0][neuron_source];			// va chercher l'activation de la couche L-2
-					erreur_cumulative = calcul_erreur_cumul_L_minus_1(neuron_destination);
-
-					new_weight = weight_x - learning_rate * erreur_cumulative * temp_activation_1 * (1 - temp_activation_1) * temp_activation_2;
-
-					m_listPtrMatrix_newWeight.at(m_number_layer - 2)->p[neuron_source][neuron_destination] = new_weight;
-
-
-					bias_x = m_listPtrMatrix_bias.at(m_number_layer - 2)->p[0][neuron_destination];		// bias du niveau L-1
-
-					new_bias = bias_x - learning_rate * erreur_cumulative * temp_activation_1 * (1 - temp_activation_1);
-
-					m_listPtrMatrix_newBias.at(m_number_layer - 2)->p[0][neuron_destination] = new_bias;
-
-
-
-				};
-			};
-
-			*/
-
-			
 			
 			// ***************************** MISE A JOUR DES PONDERATIONS ET BIAS*********************************************************
 			// Transfert des nouveaux W(L) et B(L) des matrices temporaires (newWeight, newBias) vers les matrices de calcul.
@@ -1314,7 +1138,29 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	}; // For(nombre de tours d'apprentissage: m_strTraining_tours
 
 	fileOutputStream.close();
+
+	// Ecriture des valeurs des bias et weight, pour analyse.
 	
+	for (int level = 1; level < (m_number_layer); level++)
+	{
+
+		CString cLigne;
+		Matrix matrice;
+		CString filename;
+
+
+		cLigne.Format(_T("Weight_Matrix_level_%d_"), level);
+		filename = cLigne +_T(".csv");
+		
+		m_listPtrMatrix_weight.at(level)->printTheMatrixToFile(m_str_REPERTOIRE, filename);
+		
+
+		
+		cLigne.Format(_T("Bias_Matrix_level_%d_ "), level);
+		filename = cLigne + _T(".csv");
+
+		m_listPtrMatrix_bias.at(level)->printTheMatrixToFile(m_str_REPERTOIRE, filename);
+	};
 
 }; // fin: OnBnClickedTest()
 
