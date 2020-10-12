@@ -134,9 +134,15 @@ void Matrix::multiplication(Matrix& a, Matrix& w, Matrix& z)
     int tempCol = w.cols_;
     int k = a.cols_;
 
-    for (int i = 0; i < tempRow; ++i) {
-        for (int j = 0; j < tempCol; ++j) {
-            for (int k = 0; k < cols_; ++k) {
+    for (int i = 0; i < tempRow; ++i) 
+    {
+        for (int j = 0; j < tempCol; ++j) 
+        {
+
+            z.p[i][j] = 0.0;
+
+            for (int k = 0; k < cols_; ++k) 
+            {
                 z.p[i][j] += (a.p[i][k] * w.p[k][j]);
             }
         }

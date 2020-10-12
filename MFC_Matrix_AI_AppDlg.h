@@ -5,6 +5,7 @@
 #include <list>
 #include "matrix.h"
 #include <vector>
+#include <string>
 #include <cstring>
 #include <iostream>
 #include <fstream>
@@ -59,6 +60,7 @@ public:
 	std::vector<Matrix*> m_listPtrMatrix_activation;
 	std::vector<Matrix*> m_listPtrMatrix_newWeight;
 	std::vector<Matrix*> m_listPtrMatrix_newBias;
+	std::vector<Matrix*> m_listPtrMatrix_gradient;
 
 
 	int m_neuron_per_layer[10] = { 0 };
@@ -68,7 +70,7 @@ public:
 	void additionMatrice(Matrix&, Matrix&, int n);
 	void sigmoidMatrice(Matrix&, int n);
 	void initialiseActivationNiveauSuivant(Matrix&, Matrix&, int n);
-
+	double calcul_erreur_cumul_L_minus_1(int neuron);				// calcule l'erreur cumulative pour un neuron de la couche L-1 (utilisé lors du backpropagation)
 	struct sampleStructure
 	{
 		int numberOfSample;			// nombre d'échantillons dans le fichier
@@ -94,16 +96,18 @@ public:
 	int GetNextSampleInput(int theSampleNumber);
 	int GetNextSampleOutput(int theSampleNumber);
 
-
+	std::ofstream fileOutputStream;
 
 	std::array<int,10> ConvertNextSampleToBinary(int sampleInputDecimal);
 
 	CString m_TrainingDataFile;
+	CString m_outputDataFile;
 	CString m_str_SampleSize;
 	CString m_str_NeuronPerSampleInput;
 	std::vector<sample> m_samples_vector;
 	double m_fCostFunctionError;
 	double learning_rate=0.5;
+	std::array<double, 10> m_double_inputArray_X, m_double_outputArray_Y;
 
 	
 	CString m_strTraining_tours;
@@ -112,4 +116,5 @@ public:
 	CString m_str_learning_rate;
 	CString m_display_tour;
 	CString m_display_erreur;
+	BOOL m_bool_verbose;
 };
