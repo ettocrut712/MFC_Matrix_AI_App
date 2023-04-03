@@ -10,6 +10,7 @@
 #include <Windows.h>
 #include <stdint.h>
 #include <string.h>
+//#include "pch.h"
 #include <cstring>
 
 
@@ -58,10 +59,11 @@ Matrix::Matrix() : rows_(1), cols_(1)
 
 Matrix::~Matrix()
 {
-    for (int i = 0; i < rows_; ++i) {
+    for (int i = 0; i < rows_; ++i) 
+    {
         delete[] p[i];
     }
-    delete[] p;
+    delete [] p;
 }
 
 Matrix::Matrix(const Matrix& m) : rows_(m.rows_), cols_(m.cols_)
@@ -131,25 +133,31 @@ Matrix& Matrix::operator*=(const Matrix& m)
     }
     return (*this = temp);
 }
-void Matrix::multiplication(Matrix& a, Matrix& w, Matrix& z)
+void Matrix::multiplication(Matrix& Ma, Matrix& Mb, Matrix& Mc)
 {
-    int tempRow = a.rows_;
-    int tempCol = w.cols_;
-    int k = a.cols_;
+    int tempRow = Mb.rows_;
+    int tempCol = Ma.cols_;
 
-    for (int i = 0; i < tempRow; ++i) 
+    assert(Mb.rows_ == Ma.cols_);
+
+    int k = Mb.cols_;
+    double temp1, temp2, temp3;
+
+    for (int Bc = 0; Bc < Mb.cols_; Bc++)					// Bc = colonnes de la matrice "B"
     {
-        for (int j = 0; j < tempCol; ++j) 
+        for (int Ar = 0; Ar < Mb.rows_; Ar++)				// Ar= row de la matrice "A"
         {
 
-            z.p[i][j] = 0.0;
+            Mc.p[Ar][Bc] = 0.0;								//initialise avant d'accumuler le produit des multiplications.
 
-            for (int k = 0; k < cols_; ++k) 
+            for (int Ac = 0; Ac < Ma.cols_; Ac++)			// Ac= colonne de la matrice "A"
             {
-                z.p[i][j] += (a.p[i][k] * w.p[k][j]);
-            }
-        }
-    }
+                Mc.p[Ar][Bc] += (Ma.p[Ar][Ac] * Mb.p[Ac][Bc]);
+
+            };
+        };
+
+    };
     
 }
 
@@ -244,7 +252,7 @@ Matrix Matrix::solve(Matrix A, Matrix b)
     if (x.p[x.rows_ - 1][0] < EPS && x.p[x.rows_ - 1][0] > -1 * EPS)
         x.p[x.rows_ - 1][0] = 0;
     for (int i = x.rows_ - 2; i >= 0; --i) {
-        int sum = 0;
+        double sum = 0;
         for (int j = i + 1; j < x.rows_; ++j) 
         {
             sum += A.p[i][j] * x.p[j][0];
@@ -281,7 +289,7 @@ Matrix Matrix::bandSolve(Matrix A, Matrix b, int k)
     Matrix x(b.rows_, 1);
     x.p[x.rows_ - 1][0] = b.p[x.rows_ - 1][0] / A.p[x.rows_ - 1][x.rows_ - 1];
     for (int i = x.rows_ - 2; i >= 0; --i) {
-        int sum = 0;
+       double sum = 0;
         for (int j = i + 1; j < x.rows_; ++j) {
             sum += A.p[i][j] * x.p[j][0];
         }
@@ -518,11 +526,21 @@ Matrix Matrix::inverse()
 
 void Matrix::allocSpace()
 {
-    p = new double* [rows_];
-    for (int i = 0; i < rows_; ++i)
+  
+    try 
     {
-        p[i] = new double[cols_];
-    };
+        p = new  double* [rows_];
+       
+        if (p == NULL) throw;
+        for (int i = 0; i < rows_; ++i)
+        {
+            p[i] = new double[cols_];
+            if (p[i] == NULL) throw;
+        };
+    }
+    catch(bad_alloc){cout << "allocSpace" << "\n"; };
+
+   
 };
 
 Matrix Matrix::expHelper(const Matrix& m, int num)
@@ -605,8 +623,7 @@ std::istream& operator>>(std::istream& is, Matrix& m)
 void Matrix::init_bias_and_weight()
 {
     // genere une distribution "normal" de nombre aleatoire.  parametres:  "distribution(moyenne=0.0, deviation_standard= 1.0)"
-    time_t timer;
-    double seconds;
+   
     struct tm y2k = { 0 };
 
     int counter = 0;

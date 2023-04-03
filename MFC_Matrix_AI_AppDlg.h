@@ -11,6 +11,8 @@
 #include <fstream>
 #include <bitset>
 #include <array>
+#include <atlstr.h>
+#include <exception>
 #pragma once
 
 
@@ -42,8 +44,7 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedCreateMatrix();
-	afx_msg void OnEnChangeEdit1();
-
+	
 	int m_number_layer = 0;
 	CString mStr_layer_1_neurons;
 	CString mStr_layer_2_neurons;
@@ -69,7 +70,15 @@ public:
 	void copieMatrice(Matrix& source, Matrix& destination);
 	void additionMatrice(Matrix&, Matrix&, int n);
 	void sigmoidMatrice(Matrix&, int n);
-	void initialiseActivationNiveauSuivant(Matrix&, Matrix&, int n);
+	void RELU(Matrix&, int n);
+	void initActivation(Matrix&, Matrix&, int n);
+	void imprimeMatrices();
+	void saveToFileActivation_lossFunction();
+	void cleanMemoryPointer();
+	void PrintMatrixToListBox(Matrix& myMatrix, int level, int type);
+
+	int weightType = 0, biasType = 1, activationType =2, zType =3, gradientType = 4;
+
 	double calcul_erreur_cumul_L_minus_1(int neuron);				// calcule l'erreur cumulative pour un neuron de la couche L-1 (utilisé lors du backpropagation)
 	struct sampleStructure
 	{
@@ -118,4 +127,10 @@ public:
 	CString m_display_tour;
 	CString m_display_erreur;
 	BOOL m_bool_verbose;
+	CString m_CStr_activation_choice;
+	afx_msg void OnLbnDblclkActivationChoice();
+	
+	CComboBox m_comboListBox_activation;
+	CString m_str_activationSelection;
+	afx_msg void OnBnClickedOk();
 };

@@ -2,7 +2,7 @@
 #include <random>
 
 
-float sigmoid(float z)
+double sigmoid(float z)
 {
 	float result;
 	result = exp(-z);
@@ -10,9 +10,9 @@ float sigmoid(float z)
 	return 1.0 / (1.0 + result);
 };
 
-float sigmoid_prime(float z)
+double  sigmoid_prime(float z)
 {
-	float temp = sigmoid(z);
+	double temp = sigmoid(z);
 	return temp * (1 - temp);
 
 };

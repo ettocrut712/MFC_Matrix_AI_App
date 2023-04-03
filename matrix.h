@@ -10,6 +10,8 @@
 #include <cstring>
 #include <fstream>
 #include <atlstr.h>
+#include <cassert>
+
 
 
 
