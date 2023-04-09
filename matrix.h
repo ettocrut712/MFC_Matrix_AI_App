@@ -63,7 +63,7 @@ public:
 
     void multiplication(Matrix&, Matrix&, Matrix&);
     void init_bias_and_weight();
-    void init_activation_and_z();
+    void reset_matrix_to_zero();
     void printTheMatrixToFile(LPCTSTR leRepertoire, LPCTSTR leFilename);
    
     

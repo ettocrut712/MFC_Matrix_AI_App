@@ -145,7 +145,7 @@ void Matrix::multiplication(Matrix& Ma, Matrix& Mb, Matrix& Mc)
 
     for (int Bc = 0; Bc < Mb.cols_; Bc++)					// Bc = colonnes de la matrice "B"
     {
-        for (int Ar = 0; Ar < Mb.rows_; Ar++)				// Ar= row de la matrice "A"
+        for (int Ar = 0; Ar < Ma.rows_; Ar++)				// Ar= row de la matrice "A"
         {
 
             Mc.p[Ar][Bc] = 0.0;								//initialise avant d'accumuler le produit des multiplications.
@@ -626,7 +626,7 @@ void Matrix::init_bias_and_weight()
    
     struct tm y2k = { 0 };
 
-    int counter = 0;
+    double counter = 1;
 
     SYSTEMTIME time;
     GetSystemTime(&time);
@@ -640,13 +640,16 @@ void Matrix::init_bias_and_weight()
         for (int j = 0; j < cols_; ++j)
         {
 
-            p[i][j] = distribution(generator);
+          //  p[i][j] = distribution(generator);
+
+            p[i][j] = counter/10;              // distribution test pour tester
+            counter++;
         };
     };
     
 };
 
-void Matrix::init_activation_and_z()
+void Matrix::reset_matrix_to_zero()
 {
     // Mets tous les parametres a zero"
 

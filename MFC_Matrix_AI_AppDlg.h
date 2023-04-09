@@ -62,6 +62,7 @@ public:
 	std::vector<Matrix*> m_listPtrMatrix_newWeight;
 	std::vector<Matrix*> m_listPtrMatrix_newBias;
 	std::vector<Matrix*> m_listPtrMatrix_gradient;
+	std::vector<Matrix*> m_listPtrMatrix_dCo_dBj;				
 
 
 	int m_neuron_per_layer[10] = { 0 };
@@ -71,19 +72,19 @@ public:
 	void additionMatrice(Matrix&, Matrix&, int n);
 	void sigmoidMatrice(Matrix&, int n);
 	void RELU(Matrix&, int n);
-	void initActivation(Matrix&, Matrix&, int n);
+	void activation(Matrix&, Matrix&, int n);
 	void imprimeMatrices();
-	void saveToFileActivation_lossFunction();
+	void saveToFileactivation_lossFunction();
 	void cleanMemoryPointer();
-	void PrintMatrixToListBox(Matrix& myMatrix, int level, int type);
+	void PrintMatrixToListBox(Matrix& myMatrix, int type);
 
 	int weightType = 0, biasType = 1, activationType =2, zType =3, gradientType = 4;
 
 	double calcul_erreur_cumul_L_minus_1(int neuron);				// calcule l'erreur cumulative pour un neuron de la couche L-1 (utilisé lors du backpropagation)
 	struct sampleStructure
 	{
-		int numberOfSample;			// nombre d'échantillons dans le fichier
-		int inputSampleBitSize;				// nombre de bits par échantillon.  On suppose que les valeurs des inputs sont 0 ou 1.  Une autre version sera requise pour des valeurs de 0.0  à 1.0 (nombre réel).
+		int numberOfSample;											// nombre d'échantillons dans le fichier
+		int inputSampleBitSize;										// nombre de bits par échantillon.  On suppose que les valeurs des inputs sont 0 ou 1.  Une autre version sera requise pour des valeurs de 0.0  à 1.0 (nombre réel).
 		int outputSampleBitSize;
 	};
 
@@ -128,9 +129,12 @@ public:
 	CString m_display_erreur;
 	BOOL m_bool_verbose;
 	CString m_CStr_activation_choice;
-	afx_msg void OnLbnDblclkActivationChoice();
+	afx_msg void OnLbnDblclkactivationChoice();
 	
 	CComboBox m_comboListBox_activation;
 	CString m_str_activationSelection;
 	afx_msg void OnBnClickedOk();
+	afx_msg void OnEnChangeEdit3();
+	afx_msg void OnEnChangeTour();
+	afx_msg void OnEnChangeErreur();
 };
