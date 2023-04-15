@@ -627,6 +627,7 @@ void Matrix::init_bias_and_weight()
     struct tm y2k = { 0 };
 
     double counter = 1;
+    double test;
 
     SYSTEMTIME time;
     GetSystemTime(&time);
@@ -639,10 +640,9 @@ void Matrix::init_bias_and_weight()
     {
         for (int j = 0; j < cols_; ++j)
         {
-
-          //  p[i][j] = distribution(generator);
-
-            p[i][j] = counter/10;              // distribution test pour tester
+           
+           p[i][j] = distribution(generator);
+            
             counter++;
         };
     };

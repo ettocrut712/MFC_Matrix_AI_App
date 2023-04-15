@@ -13,8 +13,12 @@
 #include <array>
 #include <atlstr.h>
 #include <exception>
+
+#include "tokenscanner.h"
+
 #pragma once
 
+using namespace std;
 
 // CMFCMatrixAIAppDlg dialog
 class CMFCMatrixAIAppDlg : public CDialogEx
@@ -60,10 +64,10 @@ public:
 	std::vector<Matrix*> m_listPtrMatrix_z;
 	std::vector<Matrix*> m_listPtrMatrix_activation;
 	std::vector<Matrix*> m_listPtrMatrix_newWeight;
-	std::vector<Matrix*> m_listPtrMatrix_newBias;
 	std::vector<Matrix*> m_listPtrMatrix_gradient;
 	std::vector<Matrix*> m_listPtrMatrix_dCo_dBj;				
 
+	TokenScanner scanner;
 
 	int m_neuron_per_layer[10] = { 0 };
 
@@ -137,4 +141,6 @@ public:
 	afx_msg void OnEnChangeEdit3();
 	afx_msg void OnEnChangeTour();
 	afx_msg void OnEnChangeErreur();
+	afx_msg void OnBnClickedSauvematrices();
+	afx_msg void OnBnClickedButtonLireMatrices();
 };
