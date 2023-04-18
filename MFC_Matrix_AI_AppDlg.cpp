@@ -101,6 +101,7 @@ void CMFCMatrixAIAppDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_TOUR, m_display_tour);
 	DDX_Text(pDX, IDC_ERREUR, m_display_erreur);
 	DDX_Check(pDX, IDC_CHECK_VERBOSE, m_bool_verbose);
+	DDX_Check(pDX, IDC_CHECK_Verb_activation, m_bool_verb_activation);
 	DDX_Control(pDX, IDC_COMBO_activation, m_comboListBox_activation);
 	DDX_CBString(pDX, IDC_COMBO_activation, m_str_activationSelection);
 }
@@ -243,6 +244,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 
 	CString cLigne;
 
+	if (m_number_layer > 0) cleanMemoryPointer();					// efface la configuration precedente ici.
 
 	for (int i = 0; i < 10; i++)
 		m_neuron_per_layer[i] = 0;
@@ -300,8 +302,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 	int level = 0;
 
 
-	int neuron_this_level, neuron_next_level, neuron_previous_level;
-	Matrix *myMatrix,*myNewMatrix;
+	Matrix *myMatrix;
 
 	//*******************************************************
 
@@ -432,7 +433,8 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreateMatrix()
 	m_listBox1.InsertString(-1, cLigne);
 
 	
-
+	CreateInputTest();							//genere des donnes (input) allant dans l'interval: 0 - 1;
+	CreateOutputTest();							//genere des donnes (resultat attendu : Y output) dans l'interval: 0 - 1;
 
 	
 
@@ -535,18 +537,22 @@ void CMFCMatrixAIAppDlg::OnBnClickedCreatetestinput()
 	m_listBox1.InsertString(-1, cLigne);*/
 }
 
+
+
+
+
+
 void CMFCMatrixAIAppDlg::multiplicationMatrice(Matrix& Ma, Matrix& Mb, Matrix& Mc, int level)		//Matrix "a" , "b" sont les inputs, Matrix "c": output
 {
 	//multiplication de matrices R x C (row x colonne).  Le nombre de colonne de la matrice "a" doit etre egal au nombre de "row" de la matrice "b" sinon kaput.  Resultat: dimension de la matrice C: a.row x b.colonne
 	
 	int tempRow = Mb.rows_;
 	int tempCol = Ma.cols_;
+	CString cLigne;
 
 	assert(Mb.rows_ == Ma.cols_);
 
-	int k = Mb.cols_;
-	double temp1, temp2, temp3;
-	
+		
 	for (int Bc = 0; Bc < Mb.cols_; Bc++)					// Bc = colonnes de la matrice "B"
 	{
 		for (int Ar = 0; Ar < Ma.rows_; Ar++)				// Ar= row de la matrice "A"
@@ -562,26 +568,8 @@ void CMFCMatrixAIAppDlg::multiplicationMatrice(Matrix& Ma, Matrix& Mb, Matrix& M
 		};
 
 	};
-	CString cLigne;
-
-	/*if (m_bool_verbose)
-	{
-		cLigne.Format(_T("Resultat de la multiplication: C int.(%d) = A(%d) x B(%d) \t"), level, level - 1, level);
-		m_listBox1.InsertString(-1, cLigne);
-
-		for (int i = 0; i < Mc.rows_; i++)
-		{
-			for (int j = 0; j < Mc.cols_; j++)
-			{
-				cLigne.Format(_T("r:%d c:%d [ %7.5f]  \t"), i, j, Mc.p[i][j]);
-				m_listBox1.InsertString(-1, cLigne);
-			};
-
-			cLigne.Format(_T("\t "));
-
-			m_listBox1.InsertString(-1, cLigne);
-		};
-	};*/
+	
+	
 }
 
 //**********************
@@ -659,7 +647,7 @@ int CMFCMatrixAIAppDlg::GetNextSampleOutput(int theSampleNumber)
 	CString cLigne;
 	sample mySample;
 	
-	//mySample = m_samples_vector.at(theSampleNumber);
+	mySample = m_samples_vector.at(theSampleNumber);
 
 	return 0;//mySample.output;
 };
@@ -682,6 +670,272 @@ std::array<int,10> CMFCMatrixAIAppDlg::ConvertNextSampleToBinary(int theNextSamp
 	return myArray;
 };
 
+void CMFCMatrixAIAppDlg::Propagation()
+{
+	
+	CString cLigne;
+	int layer;
+
+	for (layer = 1; layer < (m_number_layer); layer++)													// layer 0 = entrée du système.  Layer =1 première couche de calcul.
+	{
+
+
+		multiplicationMatrice(*m_listPtrMatrix_weight.at(layer), *m_listPtrMatrix_activation.at(layer - 1), *m_listPtrMatrix_z.at(layer), layer);	//calcul: entrée(W(L)) * entrée(A(L-1)) -> sortie(Z(L))
+
+		if (m_bool_verbose)
+		{
+			cLigne.Format(_T("Propagation: multiplication: (Layer: %d): Z(L) <-- W(L: %d) x A(L: %d) \t"), layer, layer, layer - 1);
+			m_listBox1.InsertString(-1, cLigne);
+			PrintMatrixToListBox(*m_listPtrMatrix_weight.at(layer), weightType);
+			PrintMatrixToListBox(*m_listPtrMatrix_activation.at(layer - 1), activationType);					//int weightType = 0, biasType = 1, activationType =2, zType =3 gradientType = 4;
+			PrintMatrixToListBox(*m_listPtrMatrix_z.at(layer), zType);
+			cLigne.Format(_T("Propagation: addition: (Layer: %d)  A(L: %d)= B(L: %d) + Z(L: %d) \t"), layer, layer, layer, layer);
+			m_listBox1.InsertString(-1, cLigne);
+		};
+
+		additionMatrice(*m_listPtrMatrix_z.at(layer), *m_listPtrMatrix_bias.at(layer), layer);														//calcul: sortie(z) <- entrée (z) + entrée (b)
+
+		if (m_bool_verbose)
+		{
+			PrintMatrixToListBox(*m_listPtrMatrix_bias.at(layer), biasType);
+			PrintMatrixToListBox(*m_listPtrMatrix_z.at(layer), zType);
+		};
+
+		copieMatrice(*m_listPtrMatrix_z.at(layer), *m_listPtrMatrix_activation.at(layer));															// Z(L) -> A(L)
+
+		if (m_str_activationSelection == "Sigmoid")
+		{
+			sigmoidMatrice(*m_listPtrMatrix_activation.at(layer), layer);																			//calcul:sortie(z) <- sigmoid(entrée(z))
+		};
+
+		if (m_str_activationSelection == "RELU")
+		{
+			RELU(*m_listPtrMatrix_activation.at(layer), layer);																						//calcul:sortie(z) <- RELU(entrée(z))
+		};
+
+
+		char myString[60];
+		strcpy_s(myString, (LPCSTR)m_str_activationSelection.GetString());
+
+		if (m_bool_verb_activation)
+		{
+			cLigne.Format(_T("Propagation: : (Layer: %d) A(L:%d) <--  (%hs   )(Z(L: %d)) \t"), layer, layer, myString, layer); // m_str_activationSelection
+			m_listBox1.InsertString(-1, cLigne);
+
+			PrintMatrixToListBox(*m_listPtrMatrix_activation.at(layer), activationType);
+		};
+	};  // for layer (propagation)
+};
+
+void CMFCMatrixAIAppDlg::BackPropagation()
+{
+	double dCo_dBj = 0.0, dCo_dWkj = 0.0, dCo_dAkLminus = 0.0;
+	CString cLigne;
+
+	double activation_L = 0.0;					// activation à la couche "L"
+	double activation_x_Lminus = 0.0;			// activation à la couche "L-1"
+	double bias_x = 0.0, weight_x = 0.0;		// bias et weight actuel (avant modification)
+	int neurone_k_source, neurone_j_destination = 0;
+
+	learning_rate = _ttof(m_str_learning_rate);	// va lire le "learning rate"
+
+	for (int layer = m_number_layer - 1; layer > 0; layer--)
+	{
+
+		// **************************Calcule du gradient bias dCo/dBj) pour cette couche****************************
+
+		for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer]; neurone_j_destination++)
+		{
+
+			//dCo_dAkLminus = 0.0;
+
+
+
+			if (m_str_activationSelection == "Sigmoid")
+			{
+				activation_L = m_listPtrMatrix_activation.at(layer)->p[neurone_j_destination][0];									// activation = Ak(j)
+				dCo_dBj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * activation_L * (1 - activation_L);		//dCo/dBj
+			}
+
+			if (m_str_activationSelection == "RELU")
+			{
+				dCo_dBj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0];											//dCo/dBj
+			};
+
+
+
+			m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_j_destination][0] = dCo_dBj;												//matrice des gradients pour les polarisations.  UTILE POUR CALCUL DE dCo_dAk(L-1)
+
+
+			m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0] = m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0] - learning_rate * m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_j_destination][0];
+
+			if (m_bool_verbose)
+			{
+				cLigne.Format(_T("BackProp:(dCo/dBj) lev %d, j %d,k:%d  bias: %e  \n"), layer, neurone_j_destination, 0, m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0]);
+				m_listbox_cost_function.InsertString(-1, cLigne);
+			};
+		};
+
+
+		//******************************Debut: Calcul du gradient ponderation (dCo/dWjk) ************************************************
+
+		for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer]; neurone_j_destination++)
+		{
+
+			for (neurone_k_source = 0; neurone_k_source < m_neuron_per_layer[layer - 1]; neurone_k_source++)						// Nombre de neurones dans la couche précédente: "L minus one"
+			{
+
+				if (m_str_activationSelection == "Sigmoid")
+				{
+					activation_L = m_listPtrMatrix_activation.at(layer)->p[neurone_j_destination][0];								// activation = Ak(j)
+					dCo_dWkj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * activation_L * (1 - activation_L) * m_listPtrMatrix_activation.at(layer - 1)->p[neurone_k_source][0];
+				}
+
+				if (m_str_activationSelection == "RELU")
+				{
+					dCo_dWkj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * m_listPtrMatrix_activation.at(layer - 1)->p[neurone_k_source][0];
+				};
+
+				m_listPtrMatrix_newWeight.at(layer)->p[neurone_j_destination][neurone_k_source] = m_listPtrMatrix_weight.at(layer)->p[neurone_j_destination][neurone_k_source] - learning_rate * dCo_dWkj;  // bon ordre des parmetres de p[] ???
+
+				if (m_bool_verbose)
+				{
+					cLigne.Format(_T("BP:  neurones:j %d, k%d (dCo/dWk): %e  \n"),  neurone_j_destination, neurone_k_source, dCo_dWkj);
+					m_listbox_cost_function.InsertString(-1, cLigne);
+
+
+					cLigne.Format(_T("BP:  neurones-> j: %d, k: %d nouv ponderation: %e  \n"), neurone_j_destination, neurone_k_source, m_listPtrMatrix_newWeight.at(layer)->p[neurone_j_destination][neurone_k_source]);
+					m_listbox_cost_function.InsertString(-1, cLigne);
+				};
+			};
+
+		};
+		//**************************Fin: Calcul du gradient ponderation (dCo/dWjk)************************************************
+
+
+
+		//**************************Debut: Calcul du gradient ponderation (dCo/dAk)****************************************************
+
+		for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer - 1]; neurone_j_destination++)
+		{
+
+			for (neurone_k_source = 0; neurone_k_source < m_neuron_per_layer[layer]; neurone_k_source++)						// Nombre de neurones dans la couche précédente: "L minus one"
+			{
+				dCo_dAkLminus += m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_k_source][0] * m_listPtrMatrix_weight.at(layer)->p[neurone_k_source][neurone_j_destination];
+			};
+
+			m_listPtrMatrix_gradient.at(layer - 1)->p[neurone_j_destination][0] = -learning_rate * dCo_dAkLminus;
+
+			if (m_bool_verbose)
+			{
+				cLigne.Format(_T(" \n, BP:dCo_al(L-1)  level: %d neurones  j: %d, k: %d    dCo_ak(L-1):  %7.5f  \n"), layer, neurone_j_destination, neurone_k_source, dCo_dAkLminus);
+				m_listbox_cost_function.InsertString(-1, cLigne);
+
+				cLigne.Format(_T(" \n, BP:gradient  level: %d neurones  j: %d, k: %d    G:  %7.5f  \n"), layer, neurone_j_destination, neurone_k_source, m_listPtrMatrix_gradient.at(layer - 1)->p[neurone_j_destination][0]);
+				m_listbox_cost_function.InsertString(-1, cLigne);
+			};
+
+			dCo_dAkLminus = 0.0;
+		};
+
+		//**************************Fin: Calcul du gradient ponderation (dCo/dAk)****************************************************
+
+		copieMatrice(*m_listPtrMatrix_newWeight.at(layer), *m_listPtrMatrix_weight.at(layer));			//copie new weights -> weights
+
+
+	};// for layer...
+
+};
+
+
+double CMFCMatrixAIAppDlg::CostFunction()
+{
+	
+	CString cLigne;
+
+	m_fCostFunctionError = 0.0;
+
+	//m_neuron_per_layer[m_number_layer]
+
+	for (int output = 0; output < m_neuron_per_layer[m_number_layer - 1]; output++)
+	{
+		
+		double one, two;
+		one = m_double_outputArray_Y[output];
+		two = m_listPtrMatrix_activation.at(m_number_layer - 1)->p[output][0];
+		
+		m_fCostFunctionError = m_fCostFunctionError + (pow((m_double_outputArray_Y[output] - m_listPtrMatrix_activation.at(m_number_layer - 1)->p[output][0]), 2));
+
+		if (m_bool_verbose)
+		{
+			cLigne.Format(_T("Propagation: cost function  target: %6.4f    sortie:  %6.4f \n"), m_double_outputArray_Y[output], m_listPtrMatrix_activation.at(m_number_layer - 1)->p[output][0]);
+			m_listBox1.InsertString(-1, cLigne);
+		};
+	};
+
+	m_display_erreur.Format(_T(" %15.13f    "), m_fCostFunctionError);
+
+	UpdateData(TRUE);
+	
+	//calcul gradient pour dernier niveau
+
+	for (int neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[m_number_layer - 1]; neurone_j_destination++)
+	{
+
+		m_listPtrMatrix_gradient.at(m_number_layer - 1)->p[neurone_j_destination][0] = m_listPtrMatrix_activation.at(m_number_layer - 1)->p[neurone_j_destination][0] - m_double_outputArray_Y[neurone_j_destination];
+
+	};
+
+	return m_fCostFunctionError;
+};
+
+
+void CMFCMatrixAIAppDlg::CreateInputTest()
+{
+	struct tm y2k = { 0 };
+
+	double counter = 1;
+
+
+	SYSTEMTIME time;
+	GetSystemTime(&time);
+	long time_ms = (time.wSecond * 1000) + time.wMilliseconds;
+
+	std::default_random_engine generator{ static_cast<long unsigned int>(time_ms) };
+	std::normal_distribution<double> distribution(0.0, 1.0);
+
+	for (int i = 0; i < m_neuron_per_layer[0]; ++i)
+	{
+			m_double_inputArray_X[i] = distribution(generator);
+	};
+
+};
+
+
+
+void CMFCMatrixAIAppDlg::CreateOutputTest()
+{
+	struct tm y2k = { 0 };
+
+	double counter = 1;
+
+
+	SYSTEMTIME time;
+	GetSystemTime(&time);
+	long time_ms = (time.wSecond * 1000) + time.wMilliseconds;
+
+	std::default_random_engine generator{ static_cast<long unsigned int>(time_ms) };
+	std::normal_distribution<double> distribution(0.0, 1.0);
+
+	for (int i = 0; i < m_neuron_per_layer[m_number_layer-1]; ++i)
+	{
+		
+		m_double_outputArray_Y[i] = distribution(generator);
+	};
+
+};
+
+
 void CMFCMatrixAIAppDlg::OnBnClickedTest()
 {
 	// TODO: Add your control notification handler code here
@@ -691,54 +945,25 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 	//multiplie matrice 1(Ao) avec matrice 2(Wo) et sauve le resultat dans matrice 3(Zo); ajoute le bias (Bo) a Zo, calcule le sigmoid, repete pour le niveau suivant.
 
 	CString cLigne;
-	int theNextSample_input, theNextSample_output;
-	int sampleNumber = 0;
-	int sampleSize = _ttoi(m_str_SampleSize);
 
-	double activation_L = 0.0;		// activation à la couche "L"
-	double activation_x_Lminus = 0.0;	// activation à la couche "L-1"
-
-	double bias_x=0.0, weight_x = 0.0;		// bias et weight actuel (avant modification)
-
-
-	int neurone_k_source, neurone_j_destination = 0;
-
-	double error_jth_Neuron_L_Layer=0.0;
-
-	m_fCostFunctionError = 0.0;
 
 	UpdateData(TRUE);
 
+	
+	
 
-
-
-	learning_rate = _ttof(m_str_learning_rate);						// va lire le "learning rate"
-
-	if (m_bool_verbose)
-	{
-		cLigne.Format(_T("learning rate:  %6.4f  \t"), learning_rate);
-		m_listbox_cost_function.InsertString(-1, cLigne);
-	};
+//	CreateInputTest();							//genere des donnes (input) allant dans l'interval: 0 - 1;
+//	CreateOutputTest();							//genere des donnes (resultat attendu : Y output) dans l'interval: 0 - 1;
 
 	for (int tours = 1; tours < _wtoi(m_strTraining_tours)+1; tours++)
 	{
 
-		
-		
-			//*********************************
-		m_double_inputArray_X[0] = 0.8;
-
-		m_double_inputArray_X[1] = 0.6;
-			
-
-		//*********************************
 		int layer;
 
 		for (int n = 0; n < m_listPtrMatrix_activation.at(0)->rows_; n++)
 		{
 			m_listPtrMatrix_activation.at(0)->p[n][0] = m_double_inputArray_X[n];									// lire les valeurs des données test à utiliser comme entrées du réseau
 		}
-
 
 		if (m_bool_verbose)
 		{
@@ -762,234 +987,20 @@ void CMFCMatrixAIAppDlg::OnBnClickedTest()
 		};
 
 
+		Propagation();
 
-		//****************************************************************** DEBUT: P R O P A G A T I O N  **********************************************
-		for (layer = 1; layer < (m_number_layer); layer++)													// layer 0 = entrée du système.  Layer =1 première couche de calcul.
-		{
-
-
-			multiplicationMatrice(*m_listPtrMatrix_weight.at(layer), *m_listPtrMatrix_activation.at(layer - 1), *m_listPtrMatrix_z.at(layer), layer);	//calcul: entrée(W(L)) * entrée(A(L-1)) -> sortie(Z(L))
-
-			if (m_bool_verbose)
-			{
-				cLigne.Format(_T("Propagation: multiplication: (Layer: %d): Z(L) <-- W(L: %d) x A(L: %d) \t"), layer, layer, layer - 1);
-				m_listBox1.InsertString(-1, cLigne);
-				PrintMatrixToListBox(*m_listPtrMatrix_weight.at(layer), weightType);
-				PrintMatrixToListBox(*m_listPtrMatrix_activation.at(layer - 1), activationType);					//int weightType = 0, biasType = 1, activationType =2, zType =3 gradientType = 4;
-				PrintMatrixToListBox(*m_listPtrMatrix_z.at(layer), zType);
-				cLigne.Format(_T("Propagation: addition: (Layer: %d)  A(L: %d)= B(L: %d) + Z(L: %d) \t"), layer, layer, layer, layer);
-				m_listBox1.InsertString(-1, cLigne);
-			};
-
-			additionMatrice(*m_listPtrMatrix_z.at(layer), *m_listPtrMatrix_bias.at(layer), layer);														//calcul: sortie(z) <- entrée (z) + entrée (b)
-			
-			if (m_bool_verbose)
-			{
-				PrintMatrixToListBox(*m_listPtrMatrix_bias.at(layer), biasType);
-				PrintMatrixToListBox(*m_listPtrMatrix_z.at(layer), zType);
-			};
-
-			copieMatrice(*m_listPtrMatrix_z.at(layer), *m_listPtrMatrix_activation.at(layer));															// Z(L) -> A(L)
-
-			if (m_str_activationSelection == "Sigmoid")
-			{
-				sigmoidMatrice(*m_listPtrMatrix_activation.at(layer), layer);																			//calcul:sortie(z) <- sigmoid(entrée(z))
-			};
-
-			if (m_str_activationSelection == "RELU")
-			{
-				RELU(*m_listPtrMatrix_activation.at(layer), layer);																						//calcul:sortie(z) <- RELU(entrée(z))
-			};
-
-
-			 
-			if (m_bool_verbose)
-			{
-				cLigne.Format(_T("Propagation: : (Layer: %d) A(L:%d) <--  (%s   )(Z(L: %d)) \t"), layer, layer, m_str_activationSelection, layer);
-				m_listBox1.InsertString(-1, cLigne);
-
-				PrintMatrixToListBox(*m_listPtrMatrix_activation.at(layer), activationType);
-			};
-		};  // for layer (propagation)
-
-		//****************************************************************** FIN: P R O P A G A T I O N  **********************************************
-
-		// Calcule l'erreur pour cet échantillon et fait la sommation.
-
-		
-
-		//*********************************************
-
-		m_double_outputArray_Y[0] = 0.5;   
-		m_double_outputArray_Y[1] = 0.7;
-		//*********************************************
-
-		m_fCostFunctionError = 0.0;
-
-		//m_neuron_per_layer[m_number_layer]
-
-		for (int output = 0; output < m_neuron_per_layer[m_number_layer-1]; output++)
-		{
-			m_fCostFunctionError = m_fCostFunctionError + (pow((m_double_outputArray_Y[output] - m_listPtrMatrix_activation.at(m_number_layer - 1)->p[output][0]), 2));
-
-			if (m_bool_verbose)
-			{
-				cLigne.Format(_T("Propagation: cost function  target: %6.4f    sortie:  %6.4f \n"), m_double_outputArray_Y[output], m_listPtrMatrix_activation.at(m_number_layer - 1)->p[output][0]);
-				m_listBox1.InsertString(-1, cLigne);
-			};
-		};
-
-		m_display_erreur.Format(_T(" %15.13f    "), m_fCostFunctionError);
-
-		UpdateData(FALSE);
-
-		UpdateWindow();
-
-		// Calcul du gradient (erreur) pour le dernier niveau (compare la sortie de la propagation avec le resultat attendu).
-
-		for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[m_number_layer-1]; neurone_j_destination++)
-		{
-
-			m_listPtrMatrix_gradient.at(m_number_layer-1)->p[neurone_j_destination][0] =  m_listPtrMatrix_activation.at(m_number_layer-1)->p[neurone_j_destination][0] - m_double_outputArray_Y[neurone_j_destination];
-			
-			
-		};
-
-	 
-
-
-		// ****************************************************************DEBUT:   B A C K P R O P A G A T I O N*********************************
-
+		//CostFunction();
+		m_display_erreur.Format(_T(" %15.13f    "), CostFunction());
 		
 		m_display_tour.Format(_T(" %d   "), tours);
-		m_display_erreur.Format(_T(" %15.13f    "), m_fCostFunctionError);
+
+		BackPropagation();
 
 		UpdateData(FALSE);
-
 		UpdateWindow();
 
-		if (m_bool_verbose)
-		{
-			cLigne.Format(_T("BackPropagation: Tour %d   erreur : %7.5f  \t"), tours, m_fCostFunctionError);
-			m_listbox_cost_function.InsertString(-1, cLigne);
-		};
-
-		double dCo_dBj =0.0, dCo_dWkj=0.0, dCo_dAkLminus=0.0;
-
-
-		for (int layer = m_number_layer - 1; layer > 0; layer--)
-		{
-			
-			// **************************Calcule du gradient bias dCo/dBj) pour cette couche****************************
-
-			for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer]; neurone_j_destination++)
-			{
-
-				//dCo_dAkLminus = 0.0;
-
-				
-
-				if (m_str_activationSelection == "Sigmoid")
-				{
-					activation_L = m_listPtrMatrix_activation.at(layer)->p[neurone_j_destination][0];									// activation = Ak(j)
-					dCo_dBj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * activation_L * (1 - activation_L);		//dCo/dBj
-				}
-
-				if (m_str_activationSelection == "RELU")
-				{
-					dCo_dBj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0];											//dCo/dBj
-				};
-
-
-
-				m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_j_destination][0] = dCo_dBj;												//matrice des gradients pour les polarisations.  UTILE POUR CALCUL DE dCo_dAk(L-1)
-
-
-				m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0] = m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0] - learning_rate * m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_j_destination][0];
-
-				if (m_bool_verbose)
-				{
-					cLigne.Format(_T("BackProp:(dCo/dBj) lev %d, j %d,k:%d  bias: %e  \n"), layer, neurone_j_destination, 0, m_listPtrMatrix_bias.at(layer)->p[neurone_j_destination][0]);
-					m_listbox_cost_function.InsertString(-1, cLigne);
-				};
-			};
-
-
-			//******************************Debut: Calcul du gradient ponderation (dCo/dWjk) ************************************************
-
-			for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer]; neurone_j_destination++)
-			{
-
-				for (neurone_k_source = 0; neurone_k_source < m_neuron_per_layer[layer - 1]; neurone_k_source++)						// Nombre de neurones dans la couche précédente: "L minus one"
-				{
-
-						if (m_str_activationSelection == "Sigmoid")
-						{
-							activation_L = m_listPtrMatrix_activation.at(layer)->p[neurone_j_destination][0];								// activation = Ak(j)
-							dCo_dWkj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * activation_L * (1 - activation_L) * m_listPtrMatrix_activation.at(layer - 1)->p[neurone_k_source][0];
-						}
-
-						if (m_str_activationSelection == "RELU")
-						{
-							dCo_dWkj = m_listPtrMatrix_gradient.at(layer)->p[neurone_j_destination][0] * m_listPtrMatrix_activation.at(layer - 1)->p[neurone_k_source][0];
-						};
-
-						m_listPtrMatrix_newWeight.at(layer)->p[neurone_j_destination][neurone_k_source] = m_listPtrMatrix_weight.at(layer)->p[neurone_j_destination][neurone_k_source] - learning_rate * dCo_dWkj;  // bon ordre des parmetres de p[] ???
-
-						if (m_bool_verbose)
-						{
-							cLigne.Format(_T("BP:Tour %d  neurones:j %d, k%d (dCo/dWk): %e  \n"), tours, neurone_j_destination, neurone_k_source, dCo_dWkj);
-							m_listbox_cost_function.InsertString(-1, cLigne);
-
-
-							cLigne.Format(_T("BP:Tour %d  neurones-> j: %d, k: %d nouv ponderation: %e  \n"), tours, neurone_j_destination, neurone_k_source, m_listPtrMatrix_newWeight.at(layer)->p[neurone_j_destination][neurone_k_source]);
-							m_listbox_cost_function.InsertString(-1, cLigne);
-						};
-				};
-
-				
-				
-				
-			};
-			//**************************Fin: Calcul du gradient ponderation (dCo/dWjk)************************************************
-
-			
-			
-			//**************************Debut: Calcul du gradient ponderation (dCo/dAk)****************************************************
-
-			for (neurone_j_destination = 0; neurone_j_destination < m_neuron_per_layer[layer-1]; neurone_j_destination++)
-			{
-
-				for (neurone_k_source = 0; neurone_k_source < m_neuron_per_layer[layer]; neurone_k_source++)						// Nombre de neurones dans la couche précédente: "L minus one"
-				{
-					dCo_dAkLminus += m_listPtrMatrix_dCo_dBj.at(layer)->p[neurone_k_source][0] * m_listPtrMatrix_weight.at(layer)->p[neurone_k_source][neurone_j_destination];
-				};
-
-
-				m_listPtrMatrix_gradient.at(layer - 1)->p[neurone_j_destination][0] = -learning_rate * dCo_dAkLminus;
-
-				if (m_bool_verbose)
-				{
-					cLigne.Format(_T(" \n, BP:dCo_al(L-1)  level: %d neurones  j: %d, k: %d    dCo_ak(L-1):  %7.5f  \n"), layer, neurone_j_destination, neurone_k_source, dCo_dAkLminus);
-					m_listbox_cost_function.InsertString(-1, cLigne);
-
-					cLigne.Format(_T(" \n, BP:gradient  level: %d neurones  j: %d, k: %d    G:  %7.5f  \n"), layer, neurone_j_destination, neurone_k_source, m_listPtrMatrix_gradient.at(layer - 1)->p[neurone_j_destination][0]);
-					m_listbox_cost_function.InsertString(-1, cLigne);
-				};
-
-
-
-				dCo_dAkLminus = 0.0;
-			};
-				
-			//**************************Fin: Calcul du gradient ponderation (dCo/dAk)****************************************************
-			
-			copieMatrice(*m_listPtrMatrix_newWeight.at(layer), *m_listPtrMatrix_weight.at(layer));			//copie new weights -> weights
-
-
-			
-		};// for layer...
 	}; // fin: tour
+
 }; // for btn clicked test
 
 
@@ -1097,9 +1108,9 @@ void CMFCMatrixAIAppDlg::RELU(Matrix& z, int level)
 	for (int i = 0; i < z.rows_; ++i) {
 		for (int j = 0; j < z.cols_; ++j) {
 
-			if (z.p[i][j] < 0)
+			if (z.p[i][j] < 0.0)
 			{
-				z.p[i][j] = 0.01* z.p[i][j];
+				z.p[i][j] = 0.01* z.p[i][j]; 
 			};
 		};
 	};
@@ -1408,8 +1419,7 @@ void CMFCMatrixAIAppDlg::OnBnClickedButtonLireMatrices()
 	std::ifstream inFile;
 	CFileDialog ldFile(TRUE);
 	char buffer[500];
-	int row, col;
-	float data;
+	
 	m_strTraining_tours = "1";
 
 	if (ldFile.DoModal() == IDOK)

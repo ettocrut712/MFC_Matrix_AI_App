@@ -36,7 +36,7 @@ Matrix::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
         {
         for (int j = 0; j < cols; ++j) 
            {
-            p[i][j] = 0;
+            p[i][j] = 0.0;
            }
          }
 }
@@ -141,7 +141,7 @@ void Matrix::multiplication(Matrix& Ma, Matrix& Mb, Matrix& Mc)
     assert(Mb.rows_ == Ma.cols_);
 
     int k = Mb.cols_;
-    double temp1, temp2, temp3;
+    
 
     for (int Bc = 0; Bc < Mb.cols_; Bc++)					// Bc = colonnes de la matrice "B"
     {
@@ -627,7 +627,7 @@ void Matrix::init_bias_and_weight()
     struct tm y2k = { 0 };
 
     double counter = 1;
-    double test;
+   
 
     SYSTEMTIME time;
     GetSystemTime(&time);

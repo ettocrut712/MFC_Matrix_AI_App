@@ -13,7 +13,11 @@
 #include <array>
 #include <atlstr.h>
 #include <exception>
+#include <thread>
 
+#include <math.h>
+#include <random>
+#include <time.h>
 #include "tokenscanner.h"
 
 #pragma once
@@ -69,7 +73,7 @@ public:
 
 	TokenScanner scanner;
 
-	int m_neuron_per_layer[10] = { 0 };
+	int m_neuron_per_layer[100] = { 0 };
 
 	void multiplicationMatrice(Matrix&, Matrix&, Matrix&, int n);
 	void copieMatrice(Matrix& source, Matrix& destination);
@@ -81,6 +85,11 @@ public:
 	void saveToFileactivation_lossFunction();
 	void cleanMemoryPointer();
 	void PrintMatrixToListBox(Matrix& myMatrix, int type);
+	void Propagation();
+	void BackPropagation();
+	double CostFunction();
+	void CreateInputTest();
+	void CreateOutputTest();
 
 	int weightType = 0, biasType = 1, activationType =2, zType =3, gradientType = 4;
 
@@ -121,8 +130,8 @@ public:
 
 	std::vector<sample> m_samples_vector;
 	double m_fCostFunctionError;
-	double learning_rate=0.5;
-	std::array<double, 10> m_double_inputArray_X, m_double_outputArray_Y;
+	double learning_rate=0.1;
+	std::array<double, 100> m_double_inputArray_X, m_double_outputArray_Y;
 
 	
 	CString m_strTraining_tours;
@@ -133,7 +142,7 @@ public:
 	CString m_display_erreur;
 	BOOL m_bool_verbose;
 	CString m_CStr_activation_choice;
-	afx_msg void OnLbnDblclkactivationChoice();
+	//afx_msg void OnLbnDblclkactivationChoice();
 	
 	CComboBox m_comboListBox_activation;
 	CString m_str_activationSelection;
@@ -143,4 +152,7 @@ public:
 	afx_msg void OnEnChangeErreur();
 	afx_msg void OnBnClickedSauvematrices();
 	afx_msg void OnBnClickedButtonLireMatrices();
+
+
+	BOOL m_bool_verb_activation;
 };
